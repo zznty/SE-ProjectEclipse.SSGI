@@ -1,5 +1,9 @@
 # SE-ProjectEclipse.SSGI
 
+Plugin for Space Engineers that adds single-bounce screen space global illumination.
+This is a work-in-progress meaning it doesn't look anywhere near marketable currently.
+It might be usable for taking screenshots when used in a static scene.
+
 How to install:  
 1. Clone the repo on your computer.
 2. Go to the root directory (where the .sln file is), click on the address bar, type cmd and press enter.
@@ -17,3 +21,7 @@ Settings:
 - Rays Per Pixel: Higher = Slower but more stable lighting
 - Indirect Light Multiplier: Higher = makes SSGI brighter
 - Use Denoiser/denoiser settings: Use default values unless you're just exploring
+
+Things to fix:
+- Does not work when the lit surface is moving
+- Causes specular reflection ghosting when the camera moves

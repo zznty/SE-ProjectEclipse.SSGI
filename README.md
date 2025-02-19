@@ -12,7 +12,7 @@ There should now be folder with a shortcut-looking icon called Bin64 in the root
 7. Restart the game when prompted.
 
 Settings:
-Max Ray March Steps: Leave at default value
-Rays Per Pixel: Higher = Slower but more stable lighting
-Indirect Light Multiplier: Higher = makes SSGI brighter
-Use Denoiser/denoiser settings: Use default values unless you're just exploring
+- Max Ray March Steps: Leave at default value
+- Rays Per Pixel: Higher = Slower but more stable lighting
+- Indirect Light Multiplier: Higher = makes SSGI brighter
+- Use Denoiser/denoiser settings: Use default values unless you're just exploring

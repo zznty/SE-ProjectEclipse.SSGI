@@ -40,6 +40,18 @@ float3 UnpackNormal_uint16(uint2 packed)
     return float3(xy, z);
 }
 
+// Spheremap Transform, http://aras-p.info/texts/CompactNormalStorage.html
+float3 unpack_normals2(float2 enc)
+{
+    float2 fenc = enc * 4 - 2;
+    float f = dot(fenc, fenc);
+    float g = sqrt(1 - f / 4);
+    float3 n;
+    n.xy = fenc*g;
+    n.z = 1 - f / 2;
+    return n;
+}
+
 float4 ToVector4(uint packedValue)
 {
     float4 result;

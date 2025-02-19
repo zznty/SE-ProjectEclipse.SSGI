@@ -1,4 +1,4 @@
-#include "../Pcss/vertex_transformations.hlsli"
+#include "../math.hlsli"
 #include "brdf_ggx.hlsli"
 #include "common.hlsli"
 #include "trace_hiz.hlsli"

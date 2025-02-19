@@ -1,8 +1,7 @@
 #ifndef LIB_SSR_DEFS_BINDINGS
 #define LIB_SSR_DEFS_BINDINGS
 
-//#include "../Pcss/frame.hlsli"
-#include "../Pcss/vertex_transformations.hlsli"
+#include "../math.hlsli"
 #include "../random.hlsli"
 #include "brdf_ggx.hlsli"
 

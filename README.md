@@ -25,3 +25,4 @@ Settings:
 Things to fix:
 - Does not work when the lit surface is moving
 - Causes specular reflection ghosting when the camera moves
+- Lighting on voxels look noticeably bad when the LOD changes

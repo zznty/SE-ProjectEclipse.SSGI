@@ -1,6 +1,6 @@
 # SE-ProjectEclipse.SSGI
 
-How to install:
+How to install:  
 0. Clone the repo on your computer.
 1. Go to the root directory (where the .sln file is), click on the address bar, type cmd and press enter.
 2. Run the following command: mklink /J Bin64 \<insert game bin64 path in double quotes here\>  

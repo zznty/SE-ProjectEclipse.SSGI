@@ -129,8 +129,9 @@ namespace ProjectEclipse.SSGI.Config
             {
                 JsonSerializer serializer = new JsonSerializer();
                 using (var sr = new StreamReader(_filePath))
+                using (var jr = new JsonTextReader(sr))
                 {
-                    serializer.Populate(sr, Data);
+                    Data = serializer.Deserialize<ConfigData>(jr);
                 }
                 Validate();
             }

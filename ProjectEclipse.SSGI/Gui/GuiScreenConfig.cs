@@ -10,13 +10,13 @@ namespace ProjectEclipse.SSGI.Gui
 {
     public class GuiScreenConfig : MyGuiScreenBase
     {
-        private MyGuiControlCheckbox _cEnablePlugin, _cEnableDenoiser;
+        private MyGuiControlCheckbox _cEnablePlugin, _cEnableDenoiser, _cEnablePrefiltering;
         private MyGuiControlSlider _sMaxTraceIterations, _sRaysPerPixel, _sIndirectLightMulti, _sDiffuseTemporalWeight, _sSpecularTemporalWeight, _sDiffuseAtrousIterations, _sSpecularAtrousIterations;
 
         private readonly SSGIConfig _config;
 
         public GuiScreenConfig(SSGIConfig config)
-            : base(new Vector2(0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(0.6f, 0.65f), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
+            : base(new Vector2(0.5f), MyGuiConstants.SCREEN_BACKGROUND_COLOR, new Vector2(0.6f, 0.7f), false, null, MySandboxGame.Config.UIBkOpacity, MySandboxGame.Config.UIOpacity)
         {
             _config = config;
 
@@ -70,6 +70,10 @@ namespace ProjectEclipse.SSGI.Gui
             _sRaysPerPixel = grid.AddIntegerSlider(1, row, true, _config.Data.RaysPerPixel, 1, 32, SSGIConfig.ConfigData.Default.RaysPerPixel, true, HorizontalAlignment.Left);
             row++;
 
+            grid.AddLabel(0, row, "Prefilter Input Frame", HorizontalAlignment.Left);
+            _cEnablePrefiltering = grid.AddCheckbox(1, row, true, _config.Data.EnableInputPrefiltering, null, HorizontalAlignment.Left);
+            row++;
+
             grid.AddLabel(0, row, "Indirect Light Multiplier", HorizontalAlignment.Left);
             _sIndirectLightMulti = grid.AddFloatSlider(1, row, true, _config.Data.IndirectLightMulti, 0, 10, SSGIConfig.ConfigData.Default.IndirectLightMulti, true, HorizontalAlignment.Left);
             row++;
@@ -93,6 +97,8 @@ namespace ProjectEclipse.SSGI.Gui
             grid.AddLabel(0, row, "Denoiser Specular Atrous Iterations", HorizontalAlignment.Left);
             _sSpecularAtrousIterations = grid.AddIntegerSlider(1, row, true, _config.Data.Svgf_SpecularAtrousIterations, 0, 10, SSGIConfig.ConfigData.Default.Svgf_SpecularAtrousIterations, true, HorizontalAlignment.Left);
             row++;
+
+            this.Size = new Vector2(0.6f, (rowHeight * row) + 0.2f);
 
             grid.AddControlsToScreen(this, new Vector2(0f, -0.01f), false);
 
@@ -136,6 +142,7 @@ namespace ProjectEclipse.SSGI.Gui
             _cEnablePlugin.IsChecked = SSGIConfig.ConfigData.Default.Enabled;
             _sMaxTraceIterations.Value = SSGIConfig.ConfigData.Default.MaxTraceIterations;
             _sRaysPerPixel.Value = SSGIConfig.ConfigData.Default.RaysPerPixel;
+            _cEnablePrefiltering.IsChecked = SSGIConfig.ConfigData.Default.EnableInputPrefiltering;
             _sIndirectLightMulti.Value = SSGIConfig.ConfigData.Default.IndirectLightMulti;
             _cEnableDenoiser.IsChecked = SSGIConfig.ConfigData.Default.Svgf_Enabled;
             _sDiffuseTemporalWeight.Value = SSGIConfig.ConfigData.Default.Svgf_DiffuseTemporalWeight;
@@ -149,6 +156,7 @@ namespace ProjectEclipse.SSGI.Gui
             _config.Data.Enabled = _cEnablePlugin.IsChecked;
             _config.Data.MaxTraceIterations = (int)_sMaxTraceIterations.Value;
             _config.Data.RaysPerPixel = (int)_sRaysPerPixel.Value;
+            _config.Data.EnableInputPrefiltering = _cEnablePrefiltering.IsChecked;
             _config.Data.IndirectLightMulti = _sIndirectLightMulti.Value;
             _config.Data.Svgf_Enabled = _cEnableDenoiser.IsChecked;
             _config.Data.Svgf_DiffuseTemporalWeight = _sDiffuseTemporalWeight.Value;

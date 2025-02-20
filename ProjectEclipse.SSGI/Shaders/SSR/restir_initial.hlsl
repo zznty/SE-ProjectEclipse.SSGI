@@ -88,6 +88,11 @@ void cs(const uint3 dispatchThreadId : SV_DispatchThreadID)
         SobolOwenSampler qrng;
         qrng.Init(FrameIndex * raysPerPixel, uint2(PCG_Rand(randState), PCG_Rand(randState)));
         
+        // for filtered sampling
+        const float roughness = 1.0 - input.Gloss;
+        const float n_dot_v = saturate(dot(input.NormalView, -input.RayDirView));
+        const float coneTangent = lerp(0, roughness, n_dot_v * sqrt(roughness));
+        
         for (uint r = 0; r < raysPerPixel; r++)
         {
             float pdf = 0;
@@ -116,9 +121,12 @@ void cs(const uint3 dispatchThreadId : SV_DispatchThreadID)
             
             if (hitConfidence != 0)
             {
+                const float intersectionCircleRadius = coneTangent * length(uvHit - uv);
+                const float mip = max(log2(intersectionCircleRadius * max(GetScreenSize().x, GetScreenSize().y)), 0);
+                
                 float3 hitPos = ReconstructViewPosition(uvHit);
                 float3 hitNormal = LoadNormalInViewSpace(uvHit);
-                float3 hitColor = LoadFrameColor(LinearSampler, uvHit);
+                float3 hitColor = LoadFrameColor(LinearSampler, uvHit, mip);
                 //hitColor = clamp(hitColor, 0, 50);
                 
                 float samplePdf = ComputeReflectionPdf(input, hitColor, reflectDir);

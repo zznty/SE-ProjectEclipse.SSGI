@@ -57,11 +57,20 @@ namespace ProjectEclipse.SSGI
             public Matrix PrevInvViewProjMatrix;
         }
 
+        struct Constants2
+        {
+            public static readonly unsafe int Size = sizeof(Constants2);
+
+            public Vector2 GaussianDir;
+            public float MipLevel;
+        }
+
         // shaders
         private ComputeShader _csRestirInitial;
         private ComputeShader _csRestirSpatioTemporal;
         private ComputeShader _csRestirShading;
         private ComputeShader _csRestirComposite;
+        private PixelShader _psBlur;
 
         // resources
         private IConstantBuffer _cbuffer;
@@ -70,6 +79,7 @@ namespace ProjectEclipse.SSGI
         private IBufferSrvUav _candidateReservoirs;
         private IBufferSrvUav _temporalReservoirs;
         private IBufferSrvUav _spatialReservoirs;
+        private ITexture2DSrvRtv _filteredFrame;
 
         // dependencies
         private HierarchicalDepthBufferGenerator _hzbGenerator;
@@ -106,11 +116,12 @@ namespace ProjectEclipse.SSGI
             
             int alignedCBSize = MathHelper.Align(Constants.Size, 16);
             _cbuffer = device.CreateConstantBuffer("ssgi_cbuffer", alignedCBSize, ResourceUsage.Dynamic);
-            _prevDepthBuffer = device.CreateTexture2DSrvRtv("ssgi_depth_prev", screenSize.X, screenSize.Y, 1, Format.R32_Float);
+            _prevDepthBuffer = device.CreateTexture2DSrvRtv("ssgi_depth_prev", screenSize, 1, Format.R32_Float);
             _prevReservoirs      = device.CreateBufferSrvUav("ssgi_restir_reservoirs_prev",      screenSize.X * screenSize.Y, PackedReservoir.Size);
             _candidateReservoirs = device.CreateBufferSrvUav("ssgi_restir_reservoirs_candidate", screenSize.X * screenSize.Y, PackedReservoir.Size);
             _temporalReservoirs  = device.CreateBufferSrvUav("ssgi_restir_reservoirs_temporal",  screenSize.X * screenSize.Y, PackedReservoir.Size);
             _spatialReservoirs   = device.CreateBufferSrvUav("ssgi_restir_reservoirs_spatial",   screenSize.X * screenSize.Y, PackedReservoir.Size);
+            _filteredFrame = device.CreateTexture2DSrvRtv("ssgi_filtered_input", screenSize, 7, Format.R16G16B16A16_Float, ResourceOptionFlags.GenerateMipMaps);
 
             _hzbGenerator = new HierarchicalDepthBufferGenerator(device, resourcePool, _renderUtils, shaderCompiler, 9, Format.R32_Float, screenSize);
             _diffuseDenoiser = new SVGFDenoiser(device, resourcePool, _renderUtils, shaderCompiler, _samplerStates, screenSize);
@@ -158,6 +169,83 @@ namespace ProjectEclipse.SSGI
             }
         }
 
+        private void UpdateCB2(DeviceContext rc, Vector2 gaussianDir, float mipLevel)
+        {
+            var constants = new Constants2
+            {
+                GaussianDir = gaussianDir,
+                MipLevel = mipLevel,
+            };
+
+            using (var mapping = rc.MapDiscard(_cbuffer))
+            {
+                mapping.Write(ref constants);
+            }
+        }
+
+        private void GenerateFrameMipMaps(DeviceContext rc, ITexture2DSrv frameBuffer)
+        {
+            if (_filteredFrame.MipLevels == 1)
+            {
+                _renderUtils.CopyToRT(rc, frameBuffer, _filteredFrame);
+            }
+            else
+            {
+                //_renderUtils.CopyToRT(rc, frameBuffer, _filteredFrame);
+                //rc.OutputMerger.SetTargets();
+                //rc.GenerateMips(_filteredFrame.Srv);
+                //rc.OutputMerger.SetTargets();
+                //return;
+
+                Vector2[] dir = new Vector2[_filteredFrame.MipLevels];
+                dir[0] = (Vector2)frameBuffer.Size;
+                for (int i = 1; i < dir.Length; i++)
+                {
+                    dir[i] = dir[i - 1] / 2f;
+                }
+
+                var mipTex0 = _resourcePool.BorrowTexture2DSrvRtv("ssgi_mip_0_temp", _screenSize, Format.R16G16B16A16_Float);
+                var mipTex1 = _resourcePool.BorrowTexture2DSrvRtv("ssgi_mip_1_temp", _screenSize, Format.R16G16B16A16_Float);
+
+                for (int i = 0; i < dir.Length; i++)
+                {
+                    rc.PixelShader.Set(_psBlur);
+                    rc.PixelShader.SetSampler(1, _samplerStates.Point);
+                    rc.PixelShader.SetSampler(2, _samplerStates.Linear);
+
+                    UpdateCB2(rc, new Vector2(1f / dir[i].X, 0), i);
+                    rc.PixelShader.SetConstantBuffer(0, _cbuffer.Buffer);
+
+                    rc.OutputMerger.SetRenderTargets(mipTex1.Rtv);
+                    rc.PixelShader.SetShaderResource(0, (i == 0 ? frameBuffer : mipTex0).Srv);
+                    _renderUtils.DrawFullscreenPass(rc, mipTex1.Size);
+
+                    UpdateCB2(rc, new Vector2(0, 1f / dir[i].Y), i);
+                    rc.OutputMerger.SetRenderTargets(mipTex0.Rtv);
+                    rc.PixelShader.SetShaderResource(0, mipTex1.Srv);
+                    _renderUtils.DrawFullscreenPass(rc, mipTex0.Size);
+
+                    // don't filter mip 0
+                    if (i == 0)
+                    {
+                        _renderUtils.CopyToRT(rc, frameBuffer, _filteredFrame);
+                    }
+                    else
+                    {
+                        using (var outputMip = new Texture2DMipSrvRtv(_filteredFrame.Texture, i, _filteredFrame.Format))
+                        {
+                            _renderUtils.CopyToRT(rc, mipTex0, outputMip);
+                        }
+                    }
+                }
+
+                rc.OutputMerger.SetTargets(); // flush mip render commands
+
+                mipTex0.Return();
+                mipTex1.Return();
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -173,17 +261,24 @@ namespace ProjectEclipse.SSGI
             var envMatrices = MyRender11Accessor.GetEnvironmentMatrices();
             int frameIndex = MyRender11Accessor.GetGameplayFrameCounter();
 
-            UpdateCB(rc, envMatrices, (uint)frameIndex);
+            ITexture2DSrv inputFrame = frameBuffer;
+            if (_config.Data.EnableInputPrefiltering)
+            {
+                GenerateFrameMipMaps(rc, frameBuffer);
+                inputFrame = _filteredFrame;
+            }
 
             _hzbGenerator.Generate(rc, depthBuffer);
 
-            IBorrowedTexture2DSrvRtvUav diffuseIrradiance = _resourcePool.BorrowTexture2DSrvRtvUav("ssgi_irradiance_diffuse", _screenSize.X, _screenSize.Y, Format.R16G16B16A16_Float);
-            IBorrowedTexture2DSrvRtvUav specularIrradiance = _resourcePool.BorrowTexture2DSrvRtvUav("ssgi_irradiance_specular", _screenSize.X, _screenSize.Y, Format.R16G16B16A16_Float);
-            IBorrowedTexture2DSrvRtvUav rayExtendedDepthBuffer = _resourcePool.BorrowTexture2DSrvRtvUav("ssgi_ray_extended_depth", _screenSize.X, _screenSize.Y, Format.R32_Float);
+            IBorrowedTexture2DSrvRtvUav diffuseIrradiance = _resourcePool.BorrowTexture2DSrvRtvUav("ssgi_irradiance_diffuse", _screenSize, Format.R16G16B16A16_Float);
+            IBorrowedTexture2DSrvRtvUav specularIrradiance = _resourcePool.BorrowTexture2DSrvRtvUav("ssgi_irradiance_specular", _screenSize, Format.R16G16B16A16_Float);
+            IBorrowedTexture2DSrvRtvUav rayExtendedDepthBuffer = _resourcePool.BorrowTexture2DSrvRtvUav("ssgi_ray_extended_depth", _screenSize, Format.R32_Float);
+
+            UpdateCB(rc, envMatrices, (uint)frameIndex);
 
             rc.ComputeShader.SetSamplers(1, _samplerStates.Point, _samplerStates.Linear);
             rc.ComputeShader.SetConstantBuffer(1, _cbuffer.Buffer);
-            rc.ComputeShader.SetShaderResources(0, depthBuffer.Srv, gbuffer0.Srv, gbuffer1.Srv, gbuffer2.Srv, _hzbGenerator.HzbSrv.Srv, frameBuffer.Srv);
+            rc.ComputeShader.SetShaderResources(0, depthBuffer.Srv, gbuffer0.Srv, gbuffer1.Srv, gbuffer2.Srv, _hzbGenerator.HzbSrv.Srv, inputFrame.Srv);
             rc.ComputeShader.SetUnorderedAccessViews(0, diffuseIrradiance.Uav, specularIrradiance.Uav, _prevReservoirs.Uav, _candidateReservoirs.Uav, _temporalReservoirs.Uav, _spatialReservoirs.Uav, rayExtendedDepthBuffer.Uav);
 
             InitialPass();
@@ -251,11 +346,13 @@ namespace ProjectEclipse.SSGI
             _csRestirSpatioTemporal?.Dispose();
             _csRestirShading?.Dispose();
             _csRestirComposite?.Dispose();
+            _psBlur?.Dispose();
 
             _csRestirInitial = null;
             _csRestirSpatioTemporal = null;
             _csRestirShading = null;
             _csRestirComposite = null;
+            _psBlur = null;
         }
 
         public void ReloadShaders()
@@ -266,6 +363,11 @@ namespace ProjectEclipse.SSGI
             _csRestirSpatioTemporal = _shaderCompiler.CompileCompute(_device, "SSR/restir_resampling.hlsl", "cs");
             _csRestirShading        = _shaderCompiler.CompileCompute(_device, "SSR/restir_shading.hlsl", "cs");
             _csRestirComposite      = _shaderCompiler.CompileCompute(_device, "SSR/restir_composite.hlsl", "cs");
+            _psBlur = _shaderCompiler.CompilePixel(_device, "SSR/blur.hlsl", "MipBlur");
+
+            _hzbGenerator.ReloadShaders();
+            _diffuseDenoiser.ReloadShaders();
+            _specularDenoiser.ReloadShaders();
         }
 
         public void Dispose()
@@ -273,13 +375,16 @@ namespace ProjectEclipse.SSGI
             if (!_disposed)
             {
                 _disposed = true;
+
                 DisposeShaders();
+
                 _cbuffer.Dispose();
                 _prevDepthBuffer.Dispose();
                 _prevReservoirs.Dispose();
                 _candidateReservoirs.Dispose();
                 _temporalReservoirs.Dispose();
                 _spatialReservoirs.Dispose();
+                _filteredFrame.Dispose();
 
                 _hzbGenerator.Dispose();
                 _diffuseDenoiser.Dispose();

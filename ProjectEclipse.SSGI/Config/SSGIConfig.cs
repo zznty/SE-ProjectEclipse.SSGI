@@ -10,49 +10,43 @@ namespace ProjectEclipse.SSGI.Config
     {
         public struct ConfigData
         {
-            //[JsonProperty] public bool Restir_Enabled { get; set; }
-            //[JsonProperty] public int Restir_Temporal_MaxHistory { get; set; }
-            //[JsonProperty] public int Restir_Spatial_ReuseCount { get; set; }
-            //[JsonProperty] public float Restir_Spatial_ReuseRadiusMultiplier { get; set; }
-            [JsonProperty] public bool Enabled { get; set; }
-            [JsonProperty]
+            public bool Enabled { get; set; }
             public int MaxTraceIterations
             {
                 get => _maxTraceIterations;
                 set => _maxTraceIterations = MathHelper.Clamp(value, 10, 200);
             }
-            [JsonProperty]
             public int RaysPerPixel
             {
                 get => _raysPerPixel;
                 set => _raysPerPixel = MathHelper.Clamp(value, 1, 32);
             }
-            [JsonProperty]
+            public bool EnableInputPrefiltering { get; set; }
             public float IndirectLightMulti
             {
                 get => _indirectLightMulti;
                 set => _indirectLightMulti = MathHelper.Clamp(value, 0, 10);
             }
-            [JsonProperty] public bool Svgf_Enabled { get; set; }
-            [JsonProperty]
+            //public bool Restir_Enabled { get; set; }
+            //public int Restir_Temporal_MaxHistory { get; set; }
+            //public int Restir_Spatial_ReuseCount { get; set; }
+            //public float Restir_Spatial_ReuseRadiusMultiplier { get; set; }
+            public bool Svgf_Enabled { get; set; }
             public float Svgf_DiffuseTemporalWeight
             {
                 get => _svgf_DiffuseTemporalWeight;
                 set => _svgf_DiffuseTemporalWeight = MathHelper.Clamp(value, 0, 1);
             }
-            [JsonProperty]
             public float Svgf_SpecularTemporalWeight
             {
                 get => _svgf_SpecularTemporalWeight;
                 set => _svgf_SpecularTemporalWeight = MathHelper.Clamp(value, 0, 1);
             }
-            [JsonProperty]
             public int Svgf_DiffuseAtrousIterations
             {
                 get => _svgf_DiffuseAtrousIterations;
                 set => _svgf_DiffuseAtrousIterations = MathHelper.Clamp(value, 0, 10);
             }
-            [JsonProperty]
             public int Svgf_SpecularAtrousIterations
             {
                 get => _svgf_SpecularAtrousIterations;
@@ -72,6 +66,7 @@ namespace ProjectEclipse.SSGI.Config
                 Enabled = true,
                 MaxTraceIterations = 80,
                 RaysPerPixel = 1,
+                EnableInputPrefiltering = true,
                 IndirectLightMulti = 1.0f,
                 //Restir_Enabled = true,
                 //Restir_Temporal_MaxHistory = 20,
@@ -91,6 +86,7 @@ namespace ProjectEclipse.SSGI.Config
                     Enabled = Enabled,
                     MaxTraceIterations = MaxTraceIterations,
                     RaysPerPixel = RaysPerPixel,
+                    EnableInputPrefiltering = EnableInputPrefiltering,
                     IndirectLightMulti = IndirectLightMulti,
                     Svgf_Enabled = Svgf_Enabled,
                     Svgf_DiffuseTemporalWeight = Svgf_DiffuseTemporalWeight,

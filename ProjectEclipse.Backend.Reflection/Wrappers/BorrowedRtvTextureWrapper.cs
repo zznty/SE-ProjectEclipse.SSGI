@@ -9,11 +9,12 @@ namespace ProjectEclipse.Backend.Reflection.Wrappers
 {
     internal readonly struct BorrowedRtvTextureWrapper : IBorrowedTexture2DSrvRtv
     {
-        public Texture2D Texture { get; }
+        public Texture2D Texture => (Texture2D)BorrowedTextureAccessor.GetResource(_borrowedRtvTexture);
         public ShaderResourceView Srv => BorrowedTextureAccessor.GetSrv(_borrowedRtvTexture);
         public RenderTargetView Rtv => BorrowedTextureAccessor.GetRtv(_borrowedRtvTexture);
         public Vector2I Size => BorrowedTextureAccessor.GetSize(_borrowedRtvTexture);
         public Format Format => BorrowedTextureAccessor.GetFormat(_borrowedRtvTexture);
+        public int MipLevels => BorrowedTextureAccessor.GetMipLevels(_borrowedRtvTexture);
 
         private readonly object _borrowedRtvTexture;
 
@@ -22,7 +23,6 @@ namespace ProjectEclipse.Backend.Reflection.Wrappers
             if (!borrowedRtvTextureInstance.GetType().IsAssignableTo(BorrowedTextureAccessor.Type_IBorrowedRtvTexture))
                 throw new ArgumentException();
             _borrowedRtvTexture = borrowedRtvTextureInstance;
-            Texture = (Texture2D)BorrowedTextureAccessor.GetResource(_borrowedRtvTexture);
         }
 
         public void Return() => BorrowedTextureAccessor.Release(_borrowedRtvTexture);

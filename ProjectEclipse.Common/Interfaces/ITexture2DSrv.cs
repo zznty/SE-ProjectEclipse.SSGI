@@ -11,5 +11,6 @@ namespace ProjectEclipse.Common.Interfaces
         ShaderResourceView Srv { get; }
         Vector2I Size { get; }
         Format Format { get; }
+        int MipLevels { get; }
     }
 }

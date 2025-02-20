@@ -9,12 +9,13 @@ namespace ProjectEclipse.Backend.Reflection.Wrappers
 {
     public readonly struct UavTexture2DWrapper : ITexture2DSrvRtvUav
     {
-        public Texture2D Texture { get; }
+        public Texture2D Texture => (Texture2D)ViewBindableAccessor.GetResource(_uavBindable);
         public ShaderResourceView Srv => ViewBindableAccessor.GetSrv(_uavBindable);
         public RenderTargetView Rtv => ViewBindableAccessor.GetRtv(_uavBindable);
         public UnorderedAccessView Uav => ViewBindableAccessor.GetUav(_uavBindable);
         public Vector2I Size => ViewBindableAccessor.GetSize(_uavBindable);
         public Format Format => Srv.Description.Format;
+        public int MipLevels => Srv.Description.Texture2D.MipLevels;
 
         private readonly object _uavBindable;
 
@@ -23,7 +24,6 @@ namespace ProjectEclipse.Backend.Reflection.Wrappers
             if (!uavTex2dBindable.GetType().IsAssignableTo(ViewBindableAccessor.Type_IUavBindable))
                 throw new ArgumentException();
             _uavBindable = uavTex2dBindable;
-            Texture = (Texture2D)ViewBindableAccessor.GetResource(_uavBindable);
         }
 
         public void Dispose()

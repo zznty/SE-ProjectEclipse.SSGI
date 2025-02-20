@@ -14,6 +14,7 @@ namespace ProjectEclipse.Common.Impl
         public UnorderedAccessView Uav { get; }
         public Vector2I Size { get; }
         public Format Format { get; }
+        public int MipLevels { get; }
 
         public Texture2DSrvRtvUavImpl(Device device, Texture2DDescription textureDesc)
         {
@@ -21,8 +22,9 @@ namespace ProjectEclipse.Common.Impl
             Srv = new ShaderResourceView(device, Texture);
             Rtv = new RenderTargetView(device, Texture);
             Uav = new UnorderedAccessView(device, Texture);
-            Size = new Vector2I(Texture.Description.Width, Texture.Description.Height);
-            Format = Texture.Description.Format;
+            Size = new Vector2I(textureDesc.Width, textureDesc.Height);
+            Format = textureDesc.Format;
+            MipLevels = textureDesc.MipLevels;
         }
 
         public void Dispose()

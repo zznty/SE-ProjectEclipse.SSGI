@@ -16,6 +16,7 @@ namespace ProjectEclipse.Backend.Reflection
 
         private static readonly Action<object> _Release = Type_IBorrowedUavTexture.FindMethod("Release").CreateGenericAction<object>();
         private static readonly Func<object, Format> _Format_Getter = Type_IBorrowedUavTexture.FindPropertyGetter("Format").CreateGenericFunc<object, Format>();
+        private static readonly Func<object, int> _MipLevels_Getter = Type_IBorrowedUavTexture.FindPropertyGetter("MipLevels").CreateGenericFunc<object, int>();
 
         internal static void Release(object instance) => _Release(instance);
 
@@ -25,5 +26,6 @@ namespace ProjectEclipse.Backend.Reflection
         internal static UnorderedAccessView GetUav(object instance) => ViewBindableAccessor.GetUav(instance);
         internal static Vector2I GetSize(object instance) => ViewBindableAccessor.GetSize(instance);
         internal static Format GetFormat(object instance) => _Format_Getter(instance);
+        internal static int GetMipLevels(object instance) => _MipLevels_Getter(instance);
     }
 }

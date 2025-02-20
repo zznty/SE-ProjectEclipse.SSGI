@@ -3,22 +3,21 @@ using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
-using System.Drawing;
 using VRageMath;
 using Resource = SharpDX.Direct3D11.Resource;
 
 namespace ProjectEclipse
 {
-    public class Texture2DMipSrvRtvUav : ITexture2DSrvRtvUav
+    public class Texture2DMipSrvRtv : ITexture2DSrvRtv
     {
         public Texture2D Texture { get; }
         public ShaderResourceView Srv { get; }
         public RenderTargetView Rtv { get; }
-        public UnorderedAccessView Uav { get; }
         public Vector2I Size { get; }
         public Format Format { get; }
+        public int MipLevels => 1;
 
-        public Texture2DMipSrvRtvUav(Texture2D texture, int mip, Format format)
+        public Texture2DMipSrvRtv(Texture2D texture, int mip, Format format)
         {
             if (texture.Dimension != ResourceDimension.Texture2D)
             {
@@ -49,23 +48,12 @@ namespace ProjectEclipse
                     MipSlice = mip,
                 },
             });
-
-            Uav = new UnorderedAccessView(Texture.Device, Texture, new UnorderedAccessViewDescription
-            {
-                Format = format,
-                Dimension = UnorderedAccessViewDimension.Texture2D,
-                Texture2D = new UnorderedAccessViewDescription.Texture2DResource
-                {
-                    MipSlice = mip,
-                },
-            });
         }
 
         public void Dispose()
         {
             Srv.Dispose();
             Rtv.Dispose();
-            Uav.Dispose();
         }
     }
 }

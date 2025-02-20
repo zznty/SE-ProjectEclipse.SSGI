@@ -27,8 +27,8 @@ namespace ProjectEclipse.SSGI
 
         public static IShaderCompiler ShaderCompiler { get; private set; }
         public static IResourcePool ResourcePool { get; private set; }
-        public static RenderUtils RenderUtils { get; private set; }
         public static SamplerStates SamplerStates { get; private set; }
+        public static RenderUtils RenderUtils { get; private set; }
 
         private static SSGIRenderPass _renderer;
         private Harmony _harmony;
@@ -42,8 +42,8 @@ namespace ProjectEclipse.SSGI
 
             ShaderCompiler = new FileShaderCompiler(Path.Combine(MyFileSystem.ShadersBasePath, "Shaders", "ProjectEclipse"));
             ResourcePool = new BorrowedRwTextureManagerWrapper();
-            RenderUtils = new RenderUtils(MyRender11Accessor.GetDeviceInstance(), ShaderCompiler);
             SamplerStates = new SamplerStates(MyRender11Accessor.GetDeviceInstance());
+            RenderUtils = new RenderUtils(MyRender11Accessor.GetDeviceInstance(), ShaderCompiler, SamplerStates);
         }
 
         public void LoadAssets(string assetFolderPath)

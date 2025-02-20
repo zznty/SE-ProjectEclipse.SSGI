@@ -61,8 +61,9 @@ namespace ProjectEclipse.Common
 
         private VertexShader _vsFullscreenTri;
         private DepthStencilState _dsIgnoreDepthStencil;
+        private readonly SamplerStates _samplers;
 
-        public RenderUtils(Device device, IShaderCompiler shaderCompiler)
+        public RenderUtils(Device device, IShaderCompiler shaderCompiler, SamplerStates samplers)
         {
             _vsFullscreenTri = shaderCompiler.CompileVertex(device, "fullscreen_tri.hlsl", "vs");
             _dsIgnoreDepthStencil = new DepthStencilState(device, new DepthStencilStateDescription
@@ -72,6 +73,7 @@ namespace ProjectEclipse.Common
                 IsDepthEnabled = false,
                 IsStencilEnabled = false
             });
+            _samplers = samplers;
         }
 
         public void DrawFullscreenPass(DeviceContext rc, MyViewport customViewport)
@@ -93,19 +95,28 @@ namespace ProjectEclipse.Common
         {
             if (source.Size != target.Size)
             {
-                throw new NotImplementedException();
+                // worse version of MyCopyToRT.Run()
+                rc.OutputMerger.SetBlendState(null);
+                rc.InputAssembler.InputLayout = null;
+                rc.PixelShader.Set(MyCopyToRTAccessor.GetCopyStretchPs());
+                rc.PixelShader.SetSampler(2, _samplers.Linear);
+                rc.OutputMerger.SetTargets(target.Rtv);
+                rc.OutputMerger.SetDepthStencilState(_dsIgnoreDepthStencil);
+                rc.PixelShader.SetShaderResource(0, source.Srv);
+                DrawFullscreenPass(rc, new MyViewport(target.Size));
+                return;
             }
 
-            if (source.Srv.Description.Texture2D.MostDetailedMip != target.Rtv.Description.Texture2D.MipSlice)
-            {
-                throw new NotImplementedException();
-            }
-
-            int subresourceIndex = target.Rtv.Description.Texture2D.MipSlice;
+            //if (source.Srv.Description.Texture2D.MostDetailedMip != target.Rtv.Description.Texture2D.MipSlice)
+            //{
+            //    throw new NotImplementedException();
+            //}
 
             if (source.Format == target.Format)
             {
-                rc.CopySubresourceRegion(source.Texture, subresourceIndex, null, target.Texture, subresourceIndex);
+                int srcSubres = source.Srv.Description.Texture2D.MostDetailedMip;
+                int destSubres = target.Rtv.Description.Texture2D.MipSlice;
+                rc.CopySubresourceRegion(source.Texture, srcSubres, null, target.Texture, destSubres);
             }
             else
             {

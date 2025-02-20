@@ -1,0 +1,41 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: Compile Solution (Debug)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+  
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install SteamCMD
+      - name: Setup SteamCMD
+        uses: CyberAndrii/setup-steamcmd@v1.1.5
+
+        # Install Space Engineers Dedicated Server
+      - name: Install Space Engineers
+        run: steamcmd +force_install_dir $env:GITHUB_WORKSPACE\se +login anonymous +app_update 298740 +quit
+        shell: powershell
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Build Solution
+        run: |
+          cmd /c mklink /J Bin64 se\DedicatedServer64
+          msbuild -t:restore -p:RestorePackagesConfig=true ProjectEclipse.SSGI.sln
+          msbuild -t:Build -p:OutputPath=..\build,Configuration=Debug,Platform=x64,TargetFrameworkVersion=v4.8 ProjectEclipse.SSGI/ProjectEclipse.SSGI.csproj
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: compiled_plugin
+          path: plugin.zip
+          if-no-files-found: warn
+          retention-days: 0

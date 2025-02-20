@@ -29,11 +29,13 @@ namespace ProjectEclipse.SSGI
             public Matrix ViewMatrix;
             public Matrix ProjMatrix;
             public Matrix ViewProjMatrix;
+            public Matrix InvProjMatrix;
             public Matrix InvViewProjMatrix;
 
             public Matrix PrevViewMatrix;
             public Matrix PrevProjMatrix;
             public Matrix PrevViewProjMatrix;
+            public Matrix PrevInvProjMatrix;
             public Matrix PrevInvViewProjMatrix;
         }
 
@@ -73,6 +75,7 @@ namespace ProjectEclipse.SSGI
         private Matrix _prevViewMatrix = Matrix.Identity;
         private Matrix _prevProjMatrix = Matrix.Identity;
         private Matrix _prevViewProjMatrix = Matrix.Identity;
+        private Matrix _prevInvProjMatrix = Matrix.Identity;
         private Matrix _prevInvViewProjMatrix = Matrix.Identity;
 
         private bool _disposed = false;
@@ -116,11 +119,13 @@ namespace ProjectEclipse.SSGI
                 ViewMatrix = Matrix.Transpose(envMatrices.ViewAt0),
                 ProjMatrix = Matrix.Transpose(envMatrices.Projection),
                 ViewProjMatrix = Matrix.Transpose(envMatrices.ViewProjectionAt0),
+                InvProjMatrix = Matrix.Transpose(envMatrices.InvProjection),
                 InvViewProjMatrix = Matrix.Transpose(envMatrices.InvViewProjectionAt0),
 
                 PrevViewMatrix = Matrix.Transpose(_prevViewMatrix),
                 PrevProjMatrix = Matrix.Transpose(_prevProjMatrix),
                 PrevViewProjMatrix = Matrix.Transpose(_prevViewProjMatrix),
+                PrevInvProjMatrix = Matrix.Transpose(_prevInvProjMatrix),
                 PrevInvViewProjMatrix = Matrix.Transpose(_prevInvViewProjMatrix),
             };
 
@@ -265,6 +270,7 @@ namespace ProjectEclipse.SSGI
             _prevViewMatrix = envMatrices.ViewAt0;
             _prevProjMatrix = envMatrices.Projection;
             _prevViewProjMatrix = envMatrices.ViewProjectionAt0;
+            _prevInvProjMatrix = envMatrices.InvProjection;
             _prevInvViewProjMatrix = envMatrices.InvViewProjectionAt0;
         }
 

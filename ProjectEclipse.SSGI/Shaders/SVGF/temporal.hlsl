@@ -24,11 +24,13 @@ cbuffer TemporalConstants : register(b0)
     float4x4 ViewMatrix;
     float4x4 ProjMatrix;
     float4x4 ViewProjMatrix;
+    float4x4 InvProjMatrix;
     float4x4 InvViewProjMatrix;
     
     float4x4 PrevViewMatrix;
     float4x4 PrevProjMatrix;
     float4x4 PrevViewProjMatrix;
+    float4x4 PrevInvProjMatrix;
     float4x4 PrevInvViewProjMatrix;
 };
 
@@ -103,18 +105,18 @@ float2 ComputeMotionWithRespectToHitDepth(float2 currentUv, float hitDepthRaw /*
     float3 worldPos = ClipToWorld(clipPos);
     
     float4 prevClipPos = mul(float4(worldPos + CameraDelta, 1), PrevViewProjMatrix);
-    float4 currClipPos = mul(float4(worldPos, 1), ViewProjMatrix); // isn't this just clipPos from above?
+    //float4 currClipPos = mul(float4(worldPos, 1), ViewProjMatrix); // isn't this just clipPos from above?
     
     float2 prevTexPos = ClipToTex(prevClipPos.xy / prevClipPos.w);
-    float2 currTexPos = ClipToTex(currClipPos.xy / currClipPos.w);
+    //float2 currTexPos = ClipToTex(currClipPos.xy / currClipPos.w);
     
     //prevUV = prevTexPos;
-    return currTexPos - prevTexPos;
+    return currentUv - prevTexPos;
 }
 
 float DistanceToPlane(float3 pos, float3 planePos, float3 planeNormal)
 {
-    return 0;
+    return length(pos - planePos) * abs(dot(normalize(planePos - pos), planeNormal));
 }
 
 // store accumulated sample count in the output's w component
@@ -146,18 +148,18 @@ float4 main(const float4 position : SV_Position, const float2 uv : TEXCOORD0, ou
     }
     
     const float reflectionDepth = ReflectionDepths[pixelPos];
-    if (reflectionDepth > 0)
-    {
-        float2 parallaxCorrectPrevUv = uv - ComputeMotionWithRespectToHitDepth(uv, reflectionDepth);
-        int2 parallaxCorrectPrevPixelPos = parallaxCorrectPrevUv * ScreenSize;
-        float diff = abs(ComputeLinearDepth(PrevDepthBuffer[parallaxCorrectPrevPixelPos]) - reprojectedLinearDepth) / reprojectedLinearDepth;
-        //if (diff < 0.01)
-        if (dot(LoadViewNormal(pixelPos), LoadViewNormal(parallaxCorrectPrevPixelPos)) > 0.95)
-        {
-            prevUVAndDepth.xy = parallaxCorrectPrevUv;
-            prevPixelPos = parallaxCorrectPrevPixelPos;
-        }
-    }
+    //if (reflectionDepth != 0)
+    //{
+    //    float2 parallaxCorrectPrevUv = uv - ComputeMotionWithRespectToHitDepth(uv, reflectionDepth);
+    //    int2 parallaxCorrectPrevPixelPos = parallaxCorrectPrevUv * ScreenSize;
+    //    //float diff = abs(ComputeLinearDepth(PrevDepthBuffer[parallaxCorrectPrevPixelPos]) - reprojectedLinearDepth) / reprojectedLinearDepth;
+    //    //if (diff < 0.01)
+    //    if (dot(LoadViewNormal(pixelPos), LoadViewNormal(parallaxCorrectPrevPixelPos)) > 0.99)
+    //    {
+    //        prevUVAndDepth.xy = parallaxCorrectPrevUv;
+    //        prevPixelPos = parallaxCorrectPrevPixelPos;
+    //    }
+    //}
     
     float3 historyColor;
     float historyLength;

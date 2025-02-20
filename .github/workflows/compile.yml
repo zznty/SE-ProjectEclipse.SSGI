@@ -49,7 +49,7 @@ jobs:
           msbuild -t:Build -p:OutputPath=..\ssgi-plugin,Configuration=Debug,Platform=x64,TargetFrameworkVersion=v4.8 ProjectEclipse.SSGI/ProjectEclipse.SSGI.csproj
 
       - name: Copy Shaders to Output
-        run: Copy-Item -Path "Shaders" -Destination "ssgi-plugin" -Recurse
+        run: Copy-Item -Path "ProjectEclipse.SSGI/Shaders" -Destination "ssgi-plugin" -Recurse
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4

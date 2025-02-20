@@ -14,6 +14,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Space Engineers cache
+        uses: actions/cache@v3.2.5
+        with:
+          # A list of files, directories, and wildcard patterns to cache and restore
+          path: se\
+          # An explicit key for restoring and saving the cache
+          key: seds
+          
+      - name: NuGet cache
+        uses: actions/cache@v3.2.5
+        with:
+          # A list of files, directories, and wildcard patterns to cache and restore
+          path: packages\
+          # An explicit key for restoring and saving the cache
+          key: solution_packages
+
       # Install SteamCMD
       - name: Setup SteamCMD
         uses: CyberAndrii/setup-steamcmd@v1.1.5
@@ -31,6 +47,9 @@ jobs:
           cmd /c mklink /J Bin64 se\DedicatedServer64
           msbuild -t:restore -p:RestorePackagesConfig=true ProjectEclipse.SSGI.sln
           msbuild -t:Build -p:OutputPath=..\build,Configuration=Debug,Platform=x64,TargetFrameworkVersion=v4.8 ProjectEclipse.SSGI/ProjectEclipse.SSGI.csproj
+
+      - name: Create ZIP Archive
+        run: zip plugin.zip build/* -r
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4

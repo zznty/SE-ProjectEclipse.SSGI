@@ -33,7 +33,7 @@ jobs:
           msbuild -t:Build -p:OutputPath=..\build,Configuration=Debug,Platform=x64,TargetFrameworkVersion=v4.8 ProjectEclipse.SSGI/ProjectEclipse.SSGI.csproj
 
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4
         with:
           name: compiled_plugin
           path: plugin.zip

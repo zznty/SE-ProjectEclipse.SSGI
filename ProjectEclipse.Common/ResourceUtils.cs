@@ -29,10 +29,10 @@ namespace ProjectEclipse.Common
             });
         }
 
-        public static ITexture2DSrvRtv CreateTexture2DSrvRtv(this Device device, string debugName, Vector2I size, int mipLevels, Format format) =>
-            CreateTexture2DSrvRtv(device, debugName, size.X, size.Y, mipLevels, format);
+        public static ITexture2DSrvRtv CreateTexture2DSrvRtv(this Device device, string debugName, Vector2I size, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None) =>
+            CreateTexture2DSrvRtv(device, debugName, size.X, size.Y, mipLevels, format, options);
 
-        public static ITexture2DSrvRtv CreateTexture2DSrvRtv(this Device device, string debugName, int width, int height, int mipLevels, Format format)
+        public static ITexture2DSrvRtv CreateTexture2DSrvRtv(this Device device, string debugName, int width, int height, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None)
         {
             return new Texture2DSrvRtvImpl(device, new Texture2DDescription
             {
@@ -49,14 +49,14 @@ namespace ProjectEclipse.Common
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.ShaderResource | BindFlags.RenderTarget,
                 CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
+                OptionFlags = options,
             });
         }
 
-        public static ITexture2DSrvRtvUav CreateTexture2DSrvRtvUav(this Device device, string debugName, Vector2I size, int mipLevels, Format format) =>
-            CreateTexture2DSrvRtvUav(device, debugName, size.X, size.Y, mipLevels, format);
+        public static ITexture2DSrvRtvUav CreateTexture2DSrvRtvUav(this Device device, string debugName, Vector2I size, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None) =>
+            CreateTexture2DSrvRtvUav(device, debugName, size.X, size.Y, mipLevels, format, options);
 
-        public static ITexture2DSrvRtvUav CreateTexture2DSrvRtvUav(this Device device, string debugName, int width, int height, int mipLevels, Format format)
+        public static ITexture2DSrvRtvUav CreateTexture2DSrvRtvUav(this Device device, string debugName, int width, int height, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None)
         {
             return new Texture2DSrvRtvUavImpl(device, new Texture2DDescription
             {
@@ -73,7 +73,7 @@ namespace ProjectEclipse.Common
                 Usage = ResourceUsage.Default,
                 BindFlags = BindFlags.ShaderResource | BindFlags.RenderTarget | BindFlags.UnorderedAccess,
                 CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None,
+                OptionFlags = options,
             });
         }
 

@@ -46,15 +46,34 @@ jobs:
         run: |
           cmd /c mklink /J Bin64 se\DedicatedServer64
           msbuild -t:restore -p:RestorePackagesConfig=true ProjectEclipse.SSGI.sln
-          msbuild -t:Build -p:OutputPath=..\build,Configuration=Debug,Platform=x64,TargetFrameworkVersion=v4.8 ProjectEclipse.SSGI/ProjectEclipse.SSGI.csproj
+          msbuild -t:Build -p:OutputPath=..\ssgi-plugin,Configuration=Debug,Platform=x64,TargetFrameworkVersion=v4.8 ProjectEclipse.SSGI/ProjectEclipse.SSGI.csproj
 
-      - name: Create ZIP Archive
-        run: Compress-Archive -Path build/* -Destination  plugin.zip
+      - name: Copy Shaders to Output
+        run: Copy-Item -Path "Shaders" -Destination "ssgi-plugin" -Recurse
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: compiled_plugin
-          path: plugin.zip
+          path: ssgi-plugin/
           if-no-files-found: warn
           retention-days: 0
+
+      - name: Get Current Date
+        id: date
+        uses: Kaven-Universe/github-action-current-date-time@v1.4.0
+        with:
+          format: "YYYY-MM-DD"
+
+      - name: Create Archive Release
+        uses: ncipollo/release-action@v1.14.0
+        with:
+          tag: "${{ steps.date.outputs.time }}"
+          #name: ""
+          body: |
+            ###### Released using GitHub Actions - [${{ github.workflow }} workflow #${{ github.run_number }}](${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }})
+          artifacts: "ssgi-plugin/"
+          allowUpdates: "true"
+          artifactErrorsFailBuild: "true"
+          removeArtifacts: "true"
+          replacesArtifacts: "true"

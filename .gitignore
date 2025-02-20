@@ -3,10 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-/Shaders/Dx11/
-/Shaders/GBuffer/
-/Shaders/Pcss/
-/Shaders/Restir_Decoupled/
+/ProjectEclipse.SSGI/Shaders/Dx11/
+/ProjectEclipse.SSGI/Shaders/GBuffer/
+/ProjectEclipse.SSGI/Shaders/Pcss/
+/ProjectEclipse.SSGI/Shaders/Restir_Decoupled/
 /Bin64/
 
 # User-specific files

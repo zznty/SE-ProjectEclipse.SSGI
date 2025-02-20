@@ -9,12 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProjectEclipse.Backend.Refl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProjectEclipse.SSGI", "ProjectEclipse.SSGI\ProjectEclipse.SSGI.csproj", "{D90222DC-5641-49E4-A930-6FE6E04154DB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shaders", "Shaders", "{9ACE2718-50D5-4F26-B06C-0677A770F262}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SVGF", "SVGF", "{ACA3C069-ABE0-4FFA-969D-28B7A726A8BD}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HZB", "HZB", "{EFA27E90-DA6D-4FB6-88A5-2B4173FD2D0D}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		D3D_Debug|Any CPU = D3D_Debug|Any CPU
@@ -43,10 +37,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{ACA3C069-ABE0-4FFA-969D-28B7A726A8BD} = {9ACE2718-50D5-4F26-B06C-0677A770F262}
-		{EFA27E90-DA6D-4FB6-88A5-2B4173FD2D0D} = {9ACE2718-50D5-4F26-B06C-0677A770F262}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {63548CF5-FE83-42B8-8710-E784C41A5D60}

@@ -1,11 +1,12 @@
-﻿using ProjectEclipse.Common.Interfaces;
+﻿using System;
+using ProjectEclipse.SSGI.Common.Interfaces;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.Mathematics.Interop;
-using System;
+using VRage.Render11.Resources;
 using VRageMath;
 
-namespace ProjectEclipse.Common
+namespace ProjectEclipse.SSGI.Common
 {
     public class RenderUtils : IDisposable
     {
@@ -91,7 +92,7 @@ namespace ProjectEclipse.Common
         /// <param name="source"></param>
         /// <param name="target"></param>
         /// <exception cref="NotImplementedException"></exception>
-        public void CopyToRT(DeviceContext rc, ITexture2DSrv source, ITexture2DSrvRtv target)
+        public void CopyToRT(DeviceContext rc, ISrvTexture source, IRtvTexture target)
         {
             if (source.Size != target.Size)
             {
@@ -114,9 +115,9 @@ namespace ProjectEclipse.Common
 
             if (source.Format == target.Format)
             {
-                int srcSubres = source.Srv.Description.Texture2D.MostDetailedMip;
-                int destSubres = target.Rtv.Description.Texture2D.MipSlice;
-                rc.CopySubresourceRegion(source.Texture, srcSubres, null, target.Texture, destSubres);
+                var srcSubres = source.Srv.Description.Texture2D.MostDetailedMip;
+                var destSubres = target.Rtv.Description.Texture2D.MipSlice;
+                rc.CopySubresourceRegion(source.Srv.Resource, srcSubres, null, target.Rtv.Resource, destSubres);
             }
             else
             {

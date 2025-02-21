@@ -1,16 +1,11 @@
-﻿using ProjectEclipse.Common.Interfaces;
+﻿using System;
+using System.IO;
+using ProjectEclipse.SSGI.Common.Interfaces;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VRageRender;
 
-namespace ProjectEclipse.Common
+namespace ProjectEclipse.SSGI.Common
 {
     public class FileShaderCompiler : IShaderCompiler
     {
@@ -45,7 +40,7 @@ namespace ProjectEclipse.Common
                 string includeFilePath;
                 if (parentStream is FileStream fs)
                 {
-                    string parentFilePath = Path.GetDirectoryName(fs.Name);
+                    var parentFilePath = Path.GetDirectoryName(fs.Name);
                     includeFilePath = Path.Combine(parentFilePath, fileName);
                 }
                 else
@@ -71,11 +66,11 @@ namespace ProjectEclipse.Common
 
         public PixelShader CompilePixel(Device device, string id, string entryPoint)
         {
-            string filePath = Path.Combine(_baseShaderPath, id);
-            using (StreamReader sr = new StreamReader(filePath))
+            var filePath = Path.Combine(_baseShaderPath, id);
+            using (var sr = new StreamReader(filePath))
             {
-                string fileText = sr.ReadToEnd();
-                CompilationResult compilation = ShaderBytecode.Compile(
+                var fileText = sr.ReadToEnd();
+                var compilation = ShaderBytecode.Compile(
                     fileText,
                     entryPoint,
                     "ps_5_0",
@@ -89,11 +84,11 @@ namespace ProjectEclipse.Common
 
         public VertexShader CompileVertex(Device device, string id, string entryPoint)
         {
-            string filePath = Path.Combine(_baseShaderPath, id);
-            using (StreamReader sr = new StreamReader(filePath))
+            var filePath = Path.Combine(_baseShaderPath, id);
+            using (var sr = new StreamReader(filePath))
             {
-                string fileText = sr.ReadToEnd();
-                CompilationResult compilation = ShaderBytecode.Compile(
+                var fileText = sr.ReadToEnd();
+                var compilation = ShaderBytecode.Compile(
                     fileText,
                     entryPoint,
                     "vs_5_0",
@@ -107,11 +102,11 @@ namespace ProjectEclipse.Common
 
         public ComputeShader CompileCompute(Device device, string id, string entryPoint)
         {
-            string filePath = Path.Combine(_baseShaderPath, id);
-            using (StreamReader sr = new StreamReader(filePath))
+            var filePath = Path.Combine(_baseShaderPath, id);
+            using (var sr = new StreamReader(filePath))
             {
-                string fileText = sr.ReadToEnd();
-                CompilationResult compilation = ShaderBytecode.Compile(
+                var fileText = sr.ReadToEnd();
+                var compilation = ShaderBytecode.Compile(
                     fileText,
                     entryPoint,
                     "cs_5_0",

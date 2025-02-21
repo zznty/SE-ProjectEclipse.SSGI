@@ -1,6 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.IO;
+using System.Text.Json;
+using System.Xml;
 using VRage.Utils;
 using VRageMath;
 
@@ -126,12 +127,8 @@ namespace ProjectEclipse.SSGI.Config
 
             try
             {
-                JsonSerializer serializer = new JsonSerializer();
-                using (var sr = new StreamReader(_filePath))
-                using (var jr = new JsonTextReader(sr))
-                {
-                    Data = serializer.Deserialize<ConfigData>(jr);
-                }
+                using var stream = File.OpenRead(_filePath);
+                Data = JsonSerializer.Deserialize<ConfigData>(stream);
                 Validate();
             }
             catch (Exception e)
@@ -150,17 +147,10 @@ namespace ProjectEclipse.SSGI.Config
         {
             try
             {
-                JsonSerializer serializer = new JsonSerializer
-                {
-                    Formatting = Formatting.Indented,
-                };
-
                 Directory.CreateDirectory(Path.GetDirectoryName(_filePath));
 
-                using (var sw = new StreamWriter(_filePath, false))
-                {
-                    serializer.Serialize(sw, Data);
-                }
+                using var stream = File.Create(_filePath);
+                JsonSerializer.Serialize(stream, _data);
             }
             catch (Exception e)
             {

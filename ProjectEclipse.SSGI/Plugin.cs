@@ -1,20 +1,19 @@
 ﻿using HarmonyLib;
-using ProjectEclipse.Backend.Reflection;
-using ProjectEclipse.Backend.Reflection.Wrappers;
-using ProjectEclipse.Common;
-using ProjectEclipse.Common.Interfaces;
 using ProjectEclipse.SSGI.Config;
 using ProjectEclipse.SSGI.Gui;
 using Sandbox.Graphics.GUI;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using ProjectEclipse.SSGI.Common;
+using ProjectEclipse.SSGI.Common.Interfaces;
 using VRage.FileSystem;
 using VRage.Plugins;
+using VRage.Render11.Common;
+using VRage.Render11.Resources;
+using VRageRender;
+
+[assembly: IgnoresAccessChecksTo("VRage.Render11")]
 
 namespace ProjectEclipse.SSGI
 {
@@ -26,7 +25,7 @@ namespace ProjectEclipse.SSGI
         public static SSGIRenderPass Renderer => _renderer ?? (_renderer = CreateRenderer());
 
         public static IShaderCompiler ShaderCompiler { get; private set; }
-        public static IResourcePool ResourcePool { get; private set; }
+        public static MyBorrowedRwTextureManager ResourcePool { get; private set; }
         public static SamplerStates SamplerStates { get; private set; }
         public static RenderUtils RenderUtils { get; private set; }
 
@@ -40,10 +39,10 @@ namespace ProjectEclipse.SSGI
 
             Config = new SSGIConfig(Path.Combine(MyFileSystem.UserDataPath, "Storage", "EclipseEngine", "ssgi.cfg"));
 
+            ResourcePool = MyManagers.RwTexturesPool;
             ShaderCompiler = new FileShaderCompiler(Path.Combine(MyFileSystem.ShadersBasePath, "Shaders", "ProjectEclipse"));
-            ResourcePool = new BorrowedRwTextureManagerWrapper();
-            SamplerStates = new SamplerStates(MyRender11Accessor.GetDeviceInstance());
-            RenderUtils = new RenderUtils(MyRender11Accessor.GetDeviceInstance(), ShaderCompiler, SamplerStates);
+            SamplerStates = new SamplerStates(MyRender11.DeviceInstance);
+            RenderUtils = new RenderUtils(MyRender11.DeviceInstance, ShaderCompiler, SamplerStates);
         }
 
         public void LoadAssets(string assetFolderPath)
@@ -58,7 +57,7 @@ namespace ProjectEclipse.SSGI
 
         private static SSGIRenderPass CreateRenderer()
         {
-            return new SSGIRenderPass(MyRender11Accessor.GetDeviceInstance(), Config, ResourcePool, ShaderCompiler, RenderUtils, SamplerStates, MyRender11Accessor.GetViewportResolution());
+            return new SSGIRenderPass(MyRender11.DeviceInstance, Config, ResourcePool, ShaderCompiler, RenderUtils, SamplerStates, MyRender11.ViewportResolution);
         }
 
         public void Update()

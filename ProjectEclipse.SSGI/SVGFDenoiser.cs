@@ -1,15 +1,13 @@
-﻿using ProjectEclipse.Backend.Reflection;
-using ProjectEclipse.Common;
-using ProjectEclipse.Common.Interfaces;
-using SharpDX.Direct3D11;
+﻿using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using ProjectEclipse.SSGI.Common;
+using ProjectEclipse.SSGI.Common.Interfaces;
+using VRage.Render11.Resources;
 using VRageMath;
+using VRageRender;
 using Device = SharpDX.Direct3D11.Device;
+using IConstantBuffer = ProjectEclipse.SSGI.Common.Interfaces.IConstantBuffer;
 
 namespace ProjectEclipse.SSGI
 {
@@ -68,8 +66,8 @@ namespace ProjectEclipse.SSGI
         private PixelShader _psAtrous;
 
         private IConstantBuffer _cbuffer;
-        private ITexture2DSrvRtv _temporalHistory;
-        private ITexture2DSrvRtv _buffer1; // x = history length, y = first moment, z = second moment, w = depth derivative (max(abs(ddx), abs(ddy)))
+        private IRtvTexture _temporalHistory;
+        private IRtvTexture _buffer1; // x = history length, y = first moment, z = second moment, w = depth derivative (max(abs(ddx), abs(ddy)))
 
         private Vector3D _prevCameraPos = Vector3D.Zero;
         private Matrix _prevViewMatrix = Matrix.Identity;
@@ -81,13 +79,13 @@ namespace ProjectEclipse.SSGI
         private bool _disposed = false;
 
         private readonly Device _device;
-        private readonly IResourcePool _resourcePool;
+        private readonly MyBorrowedRwTextureManager _resourcePool;
         private readonly RenderUtils _renderUtils;
         private readonly IShaderCompiler _shaderCompiler;
         private readonly SamplerStates _samplerStates;
         private readonly Vector2I _screenSize;
 
-        public SVGFDenoiser(Device device, IResourcePool resourcePool, RenderUtils renderUtils, IShaderCompiler shaderCompiler, SamplerStates samplerStates, Vector2I screenSize)
+        public SVGFDenoiser(Device device, MyBorrowedRwTextureManager resourcePool, RenderUtils renderUtils, IShaderCompiler shaderCompiler, SamplerStates samplerStates, Vector2I screenSize)
         {
             _device = device;
             _resourcePool = resourcePool;
@@ -96,7 +94,7 @@ namespace ProjectEclipse.SSGI
             _samplerStates = samplerStates;
             _screenSize = screenSize;
 
-            int alignedCBSize = MathHelper.Align(Math.Max(TemporalConstants.Size, Math.Max(FilterMomentsConstants.Size, AtrousConstants.Size)), 16);
+            var alignedCBSize = MathHelper.Align(Math.Max(TemporalConstants.Size, Math.Max(FilterMomentsConstants.Size, AtrousConstants.Size)), 16);
             _cbuffer = device.CreateConstantBuffer("svgf_cbuffer", alignedCBSize, ResourceUsage.Dynamic);
             _temporalHistory = device.CreateTexture2DSrvRtv("svgf_history", screenSize, 1, Format.R16G16B16A16_Float);
             _buffer1 = device.CreateTexture2DSrvRtv("svgf_buffer1", screenSize, 1, Format.R16G16B16A16_Float);
@@ -106,7 +104,7 @@ namespace ProjectEclipse.SSGI
 
         private void UpdateTemporalCB(DeviceContext rc)
         {
-            var envMatrices = MyRender11Accessor.GetEnvironmentMatrices();
+            var envMatrices = MyRender11.Environment.Matrices;
 
             var data = new TemporalConstants
             {
@@ -137,7 +135,7 @@ namespace ProjectEclipse.SSGI
 
         private void UpdateFilterMomentsCB(DeviceContext rc)
         {
-            var envMatrices = MyRender11Accessor.GetEnvironmentMatrices();
+            var envMatrices = MyRender11.Environment.Matrices;
 
             var data = new FilterMomentsConstants
             {
@@ -154,7 +152,7 @@ namespace ProjectEclipse.SSGI
 
         private void UpdateAtrousCB(DeviceContext rc, int stepSize)
         {
-            var envMatrices = MyRender11Accessor.GetEnvironmentMatrices();
+            var envMatrices = MyRender11.Environment.Matrices;
 
             var data = new AtrousConstants
             {
@@ -170,9 +168,9 @@ namespace ProjectEclipse.SSGI
             }
         }
 
-        private void TemporalPass(DeviceContext rc, ITexture2DSrv currentFrame, ITexture2DSrvRtv outputRtv, ITexture2DSrv depthBuffer, ITexture2DSrv reflectionDepthBuffer, ITexture2DSrv prevDepthBuffer, ITexture2DSrv gbuffer1)
+        private void TemporalPass(DeviceContext rc, ISrvTexture currentFrame, IRtvTexture outputRtv, ISrvTexture depthBuffer, ISrvTexture reflectionDepthBuffer, ISrvTexture prevDepthBuffer, ISrvTexture gbuffer1)
         {
-            var newBuffer1 = _resourcePool.BorrowTexture2DSrvRtv("svgf_buffer1_temp", _buffer1.Size, _buffer1.Format);
+            var newBuffer1 = _resourcePool.BorrowRtv("svgf_buffer1_temp", _buffer1.Size.X, _buffer1.Size.Y, _buffer1.Format);
 
             UpdateTemporalCB(rc);
 
@@ -188,10 +186,10 @@ namespace ProjectEclipse.SSGI
             _renderUtils.CopyToRT(rc, newBuffer1, _buffer1);
             rc.OutputMerger.SetTargets();
 
-            newBuffer1.Return();
+            newBuffer1.Release();
         }
 
-        private void FilterMomentsPass(DeviceContext rc, ITexture2DSrv input, ITexture2DSrvRtv output, ITexture2DSrv depthBuffer, ITexture2DSrv gbuffer1)
+        private void FilterMomentsPass(DeviceContext rc, ISrvTexture input, IRtvTexture output, ISrvTexture depthBuffer, ISrvTexture gbuffer1)
         {
             UpdateFilterMomentsCB(rc);
 
@@ -204,7 +202,7 @@ namespace ProjectEclipse.SSGI
             rc.OutputMerger.SetTargets();
         }
 
-        private void AtrousPass(DeviceContext rc, ITexture2DSrv temporallyDenoisedFrame, ITexture2DSrv depthBuffer, ITexture2DSrv gbuffer1, ITexture2DSrvRtv outputRtv, int iterations)
+        private void AtrousPass(DeviceContext rc, ISrvTexture temporallyDenoisedFrame, ISrvTexture depthBuffer, ISrvTexture gbuffer1, IRtvTexture outputRtv, int iterations)
         {
             if (iterations == 0)
             {
@@ -216,8 +214,8 @@ namespace ProjectEclipse.SSGI
             }
             else
             {
-                var tempRtv = _resourcePool.BorrowTexture2DSrvRtv("svgf_atrous_temp", _screenSize, Format.R16G16B16A16_Float);
-                var tempRtv2 = _resourcePool.BorrowTexture2DSrvRtv("svgf_atrous_temp2", _screenSize, Format.R16G16B16A16_Float);
+                var tempRtv = _resourcePool.BorrowRtv("svgf_atrous_temp", _screenSize.X, _screenSize.Y, Format.R16G16B16A16_Float);
+                var tempRtv2 = _resourcePool.BorrowRtv("svgf_atrous_temp2", _screenSize.X, _screenSize.Y, Format.R16G16B16A16_Float);
 
                 rc.PixelShader.Set(_psAtrous);
                 rc.PixelShader.SetSamplers(1, _samplerStates.Point, _samplerStates.Linear);
@@ -227,7 +225,7 @@ namespace ProjectEclipse.SSGI
                 var input = tempRtv;
                 var output = tempRtv2;
 
-                for (int i = 0; i < iterations; i++)
+                for (var i = 0; i < iterations; i++)
                 {
                     (input, output) = (output, input);
 
@@ -250,25 +248,25 @@ namespace ProjectEclipse.SSGI
                 _renderUtils.CopyToRT(rc, output, _temporalHistory);
                 rc.OutputMerger.SetTargets();
 
-                tempRtv.Return();
-                tempRtv2.Return();
+                tempRtv.Release();
+                tempRtv2.Release();
             }
         }
 
-        public void Run(DeviceContext rc, ITexture2DSrvRtv inputOutput, ITexture2DSrv depthBuffer, ITexture2DSrv reflectionDepthBuffer, ITexture2DSrv prevDepthBuffer, ITexture2DSrv gbuffer1, int iterations)
+        public void Run(DeviceContext rc, IRtvTexture inputOutput, ISrvTexture depthBuffer, ISrvTexture reflectionDepthBuffer, ISrvTexture prevDepthBuffer, ISrvTexture gbuffer1, int iterations)
         {
-            var tempRtv = _resourcePool.BorrowTexture2DSrvRtv("svgf_temp1", _screenSize, _temporalHistory.Format);
+            var tempRtv = _resourcePool.BorrowRtv("svgf_temp1", _screenSize.X, _screenSize.Y, _temporalHistory.Format);
             TemporalPass(rc, inputOutput, tempRtv, depthBuffer, reflectionDepthBuffer, prevDepthBuffer, gbuffer1);
 
-            var tempRtv2 = _resourcePool.BorrowTexture2DSrvRtv("svgf_temp2", _screenSize, _temporalHistory.Format);
+            var tempRtv2 = _resourcePool.BorrowRtv("svgf_temp2", _screenSize.X, _screenSize.Y, _temporalHistory.Format);
             FilterMomentsPass(rc, tempRtv, tempRtv2, depthBuffer, gbuffer1);
 
             AtrousPass(rc, tempRtv2, depthBuffer, gbuffer1, inputOutput, iterations);
 
-            tempRtv.Return();
-            tempRtv2.Return();
+            tempRtv.Release();
+            tempRtv2.Release();
             
-            var envMatrices = MyRender11Accessor.GetEnvironmentMatrices();
+            var envMatrices = MyRender11.Environment.Matrices;
             _prevCameraPos = envMatrices.CameraPosition;
             _prevViewMatrix = envMatrices.ViewAt0;
             _prevProjMatrix = envMatrices.Projection;
@@ -304,8 +302,6 @@ namespace ProjectEclipse.SSGI
                 _disposed = true;
                 DisposeShaders();
                 _cbuffer.Dispose();
-                _temporalHistory.Dispose();
-                _buffer1.Dispose();
             }
         }
     }

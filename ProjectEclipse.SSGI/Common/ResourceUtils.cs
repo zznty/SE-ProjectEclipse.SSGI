@@ -1,13 +1,13 @@
-﻿using ProjectEclipse.Common.Impl;
-using ProjectEclipse.Common.Interfaces;
+﻿using ProjectEclipse.SSGI.Common.Impl;
+using ProjectEclipse.SSGI.Common.Interfaces;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
-using System;
+using VRage.Render11.Resources;
 using VRageMath;
-using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
+using IConstantBuffer = ProjectEclipse.SSGI.Common.Interfaces.IConstantBuffer;
 
-namespace ProjectEclipse.Common
+namespace ProjectEclipse.SSGI.Common
 {
     public static class ResourceUtils
     {
@@ -29,10 +29,10 @@ namespace ProjectEclipse.Common
             });
         }
 
-        public static ITexture2DSrvRtv CreateTexture2DSrvRtv(this Device device, string debugName, Vector2I size, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None) =>
+        public static IRtvTexture CreateTexture2DSrvRtv(this Device device, string debugName, Vector2I size, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None) =>
             CreateTexture2DSrvRtv(device, debugName, size.X, size.Y, mipLevels, format, options);
 
-        public static ITexture2DSrvRtv CreateTexture2DSrvRtv(this Device device, string debugName, int width, int height, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None)
+        public static IRtvTexture CreateTexture2DSrvRtv(this Device device, string debugName, int width, int height, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None)
         {
             return new Texture2DSrvRtvImpl(device, new Texture2DDescription
             {
@@ -53,10 +53,10 @@ namespace ProjectEclipse.Common
             });
         }
 
-        public static ITexture2DSrvRtvUav CreateTexture2DSrvRtvUav(this Device device, string debugName, Vector2I size, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None) =>
+        public static IUavTexture CreateTexture2DSrvRtvUav(this Device device, string debugName, Vector2I size, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None) =>
             CreateTexture2DSrvRtvUav(device, debugName, size.X, size.Y, mipLevels, format, options);
 
-        public static ITexture2DSrvRtvUav CreateTexture2DSrvRtvUav(this Device device, string debugName, int width, int height, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None)
+        public static IUavTexture CreateTexture2DSrvRtvUav(this Device device, string debugName, int width, int height, int mipLevels, Format format, ResourceOptionFlags options = ResourceOptionFlags.None)
         {
             return new Texture2DSrvRtvUavImpl(device, new Texture2DDescription
             {
@@ -81,11 +81,5 @@ namespace ProjectEclipse.Common
         {
             return new BufferMapping(context, cbuffer.Buffer, MapMode.WriteDiscard, SharpDX.Direct3D11.MapFlags.None);
         }
-
-        public static IBorrowedTexture2DSrvRtv BorrowTexture2DSrvRtv(this IResourcePool resourcePool, string debugName, Vector2I size, Format format) =>
-            resourcePool.BorrowTexture2DSrvRtv(debugName, size.X, size.Y, format);
-
-        public static IBorrowedTexture2DSrvRtvUav BorrowTexture2DSrvRtvUav(this IResourcePool resourcePool, string debugName, Vector2I size, Format format) =>
-            resourcePool.BorrowTexture2DSrvRtvUav(debugName, size.X, size.Y, format);
     }
 }

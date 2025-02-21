@@ -1,68 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
-    <OutputType>Library</OutputType>
-    <LangVersion>7.3</LangVersion>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Nullable>enable</Nullable>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <PackageType>CringePlugin</PackageType>
+    <RestoreAdditionalProjectSources>https://ng.zznty.ru/v3/index.json</RestoreAdditionalProjectSources>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Configurations>D3D_Debug;Debug;Release</Configurations>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  
   <ItemGroup>
-    <ProjectReference Include="..\ProjectEclipse.Backend.Reflection\ProjectEclipse.Backend.Reflection.csproj" />
-    <ProjectReference Include="..\ProjectEclipse.Common\ProjectEclipse.Common.csproj" />
+    <Publicize Include="VRage.Render11" />
   </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="CringePlugins" Version="*" ExcludeAssets="runtime; native"/>
+    <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\Bin64\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Sandbox.Game">
-      <HintPath>..\Bin64\Sandbox.Game.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Sandbox.Graphics">
-      <HintPath>..\Bin64\Sandbox.Graphics.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="SharpDX">
-      <HintPath>..\Bin64\SharpDX.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D11">
-      <HintPath>..\Bin64\SharpDX.Direct3D11.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="SharpDX.DXGI">
-      <HintPath>..\Bin64\SharpDX.DXGI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage">
-      <HintPath>..\Bin64\VRage.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Game">
-      <HintPath>..\Bin64\VRage.Game.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Library">
-      <HintPath>..\Bin64\VRage.Library.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Math">
-      <HintPath>..\Bin64\VRage.Math.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Render">
-      <HintPath>..\Bin64\VRage.Render.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Render11">
-      <HintPath>..\Bin64\VRage.Render11.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-  </ItemGroup>
+  
+  
 </Project>

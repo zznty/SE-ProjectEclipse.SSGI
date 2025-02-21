@@ -1,8 +1,8 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
 using SharpDX.Direct3D11;
-using System;
 
-namespace ProjectEclipse.Common
+namespace ProjectEclipse.SSGI.Common
 {
     public static class MyCopyToRTAccessor
     {

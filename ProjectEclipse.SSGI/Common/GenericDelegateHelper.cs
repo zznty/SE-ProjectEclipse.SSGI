@@ -1,10 +1,10 @@
-﻿using HarmonyLib;
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using HarmonyLib;
 
-namespace ProjectEclipse.Common
+namespace ProjectEclipse.SSGI.Common
 {
     public static class GenericDelegateHelper
     {
@@ -98,7 +98,7 @@ namespace ProjectEclipse.Common
         #region field getter
         public static Func<TTarget, TReturn> CreateGenericGetter<TTarget, TReturn>(this FieldInfo field)
         {
-            MethodInfo constructedHelper = _genericFieldGetterHelper.MakeGenericMethod(field.DeclaringType, field.FieldType, typeof(TReturn));
+            var constructedHelper = _genericFieldGetterHelper.MakeGenericMethod(field.DeclaringType, field.FieldType, typeof(TReturn));
             return (Func<TTarget, TReturn>)constructedHelper.Invoke(null, new object[] { field });
         }
         #endregion field getter
@@ -106,7 +106,7 @@ namespace ProjectEclipse.Common
         #region static field getter
         public static Func<TReturn> CreateGenericStaticGetter<TReturn>(this FieldInfo field)
         {
-            MethodInfo constructedHelper = _genericStaticFieldGetterHelper.MakeGenericMethod(field.FieldType, typeof(TReturn));
+            var constructedHelper = _genericStaticFieldGetterHelper.MakeGenericMethod(field.FieldType, typeof(TReturn));
             return (Func<TReturn>)constructedHelper.Invoke(null, new object[] { field });
         }
         #endregion static field getter
@@ -121,7 +121,7 @@ namespace ProjectEclipse.Common
                 types = types.Append(method.ReturnType);
                 types = types.Append(returnType);
             }
-            MethodInfo constructedHelper = helperMethod.MakeGenericMethod(types.ToArray());
+            var constructedHelper = helperMethod.MakeGenericMethod(types.ToArray());
             return constructedHelper.Invoke(null, new object[] { method });
         }
 
@@ -246,9 +246,9 @@ namespace ProjectEclipse.Common
                 throw new Exception();
             }
 
-            string methodName = field.ReflectedType.FullName + ".get_" + field.Name;
-            DynamicMethod getterMethod = new DynamicMethod(methodName, field.FieldType, new Type[] { field.DeclaringType }, true);
-            ILGenerator ilGen = getterMethod.GetILGenerator();
+            var methodName = field.ReflectedType.FullName + ".get_" + field.Name;
+            var getterMethod = new DynamicMethod(methodName, field.FieldType, new Type[] { field.DeclaringType }, true);
+            var ilGen = getterMethod.GetILGenerator();
             ilGen.Emit(OpCodes.Ldarg_0);
             ilGen.Emit(OpCodes.Ldfld, field);
             ilGen.Emit(OpCodes.Ret);
@@ -264,9 +264,9 @@ namespace ProjectEclipse.Common
                 throw new Exception();
             }
 
-            string methodName = field.ReflectedType.FullName + ".get_" + field.Name;
-            DynamicMethod getterMethod = new DynamicMethod(methodName, field.FieldType, null, true);
-            ILGenerator ilGen = getterMethod.GetILGenerator();
+            var methodName = field.ReflectedType.FullName + ".get_" + field.Name;
+            var getterMethod = new DynamicMethod(methodName, field.FieldType, null, true);
+            var ilGen = getterMethod.GetILGenerator();
             ilGen.Emit(OpCodes.Ldsfld, field);
             ilGen.Emit(OpCodes.Ret);
 

@@ -56,7 +56,7 @@ namespace ProjectEclipse.SSGI.Gui
                 RowHeight = rowHeight,
             };
 
-            int row = 0;
+            var row = 0;
 
             grid.AddLabel(0, row, "Enable Plugin", HorizontalAlignment.Left);
             _cEnablePlugin = grid.AddCheckbox(1, row, true, _config.Data.Enabled, null, HorizontalAlignment.Left);
@@ -119,13 +119,13 @@ namespace ProjectEclipse.SSGI.Gui
 
         private void AddFooterButtons(params FooterButtonDesc[] descs)
         {
-            float yPos = (Size.Value.Y * 0.5f) - (MyGuiConstants.SCREEN_CAPTION_DELTA_Y / 2f);
-            float xInterval = 0.22f;
-            float firstButtonPosX = -((descs.Length - 1.0f) * xInterval) * 0.5f;
-            for (int i = 0; i < descs.Length; i++)
+            var yPos = (Size.Value.Y * 0.5f) - (MyGuiConstants.SCREEN_CAPTION_DELTA_Y / 2f);
+            var xInterval = 0.22f;
+            var firstButtonPosX = -((descs.Length - 1.0f) * xInterval) * 0.5f;
+            for (var i = 0; i < descs.Length; i++)
             {
-                FooterButtonDesc desc = descs[i];
-                float xPos = firstButtonPosX + (xInterval * i);
+                var desc = descs[i];
+                var xPos = firstButtonPosX + (xInterval * i);
                 var button = new MyGuiControlButton(onButtonClick: desc.OnButtonClick)
                 {
                     Position = new Vector2(xPos, yPos),

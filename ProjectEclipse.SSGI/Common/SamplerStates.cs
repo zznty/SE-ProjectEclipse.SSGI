@@ -1,7 +1,7 @@
-﻿using SharpDX.Direct3D11;
-using System;
+﻿using System;
+using SharpDX.Direct3D11;
 
-namespace ProjectEclipse.Common
+namespace ProjectEclipse.SSGI.Common
 {
     public class SamplerStates : IDisposable
     {

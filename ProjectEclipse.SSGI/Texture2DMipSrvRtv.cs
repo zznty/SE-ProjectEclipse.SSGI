@@ -1,21 +1,25 @@
-﻿using ProjectEclipse.Common.Interfaces;
+﻿using System;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
-using System;
+using VRage.Render11.Resources;
 using VRageMath;
 using Resource = SharpDX.Direct3D11.Resource;
 
-namespace ProjectEclipse
+namespace ProjectEclipse.SSGI
 {
-    public class Texture2DMipSrvRtv : ITexture2DSrvRtv
+    public class Texture2DMipSrvRtv : IRtvTexture, IDisposable
     {
         public Texture2D Texture { get; }
         public ShaderResourceView Srv { get; }
         public RenderTargetView Rtv { get; }
+        public string Name { get; }
+        public Resource Resource => Texture;
+        public Vector3I Size3 => new(Size, 0);
         public Vector2I Size { get; }
         public Format Format { get; }
         public int MipLevels => 1;
+        public event Action<ITexture>? OnFormatChanged;
 
         public Texture2DMipSrvRtv(Texture2D texture, int mip, Format format)
         {

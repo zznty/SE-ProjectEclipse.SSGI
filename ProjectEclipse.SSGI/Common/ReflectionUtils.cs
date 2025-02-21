@@ -1,14 +1,14 @@
-﻿using HarmonyLib;
-using System;
+﻿using System;
 using System.Reflection;
+using HarmonyLib;
 
-namespace ProjectEclipse.Common
+namespace ProjectEclipse.SSGI.Common
 {
     public static class ReflectionUtils
     {
         public static MethodInfo FindMethod(this Type type, string methodName, Type[] parameters = null, Type[] generics = null)
         {
-            MethodInfo method = type.Method(methodName, parameters, generics);
+            var method = type.Method(methodName, parameters, generics);
             if (method != null || !type.IsInterface)
             {
                 return method;
@@ -28,7 +28,7 @@ namespace ProjectEclipse.Common
 
         public static MethodInfo FindPropertyGetter(this Type type, string propertyName)
         {
-            MethodInfo getter = type.PropertyGetter(propertyName);
+            var getter = type.PropertyGetter(propertyName);
             if (getter != null || !type.IsInterface)
             {
                 return getter;

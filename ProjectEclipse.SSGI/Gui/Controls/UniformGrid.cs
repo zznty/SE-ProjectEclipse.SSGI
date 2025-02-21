@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRage.Utils;
 using VRageMath;
 
@@ -142,8 +140,8 @@ namespace ProjectEclipse.SSGI.Gui.Controls
 
         public void AddControlsToScreen(MyGuiScreenBase screen, Vector2 centerPos, bool drawBorderLines)
         {
-            int columns = Math.Max(MinColumns, _controls.Max(i => i.Column) + 1);
-            int rows = Math.Max(MinRows, _controls.Max(i => i.Row) + 1);
+            var columns = Math.Max(MinColumns, _controls.Max(i => i.Column) + 1);
+            var rows = Math.Max(MinRows, _controls.Max(i => i.Row) + 1);
 
             var cellSize = new Vector2(ColumnWidth, RowHeight);
             var totalSize = new Vector2(columns, rows) * cellSize;
@@ -163,12 +161,12 @@ namespace ProjectEclipse.SSGI.Gui.Controls
                     Position = centerPos,
                 };
 
-                for (int x = 0; x < columns + 1; x++)
+                for (var x = 0; x < columns + 1; x++)
                 {
                     separators.AddVertical(new Vector2(topLeft.X + ColumnWidth * x, topLeft.Y), totalSize.Y, 0.001f);
                 }
 
-                for (int y = 0; y < rows + 1; y++)
+                for (var y = 0; y < rows + 1; y++)
                 {
                     separators.AddHorizontal(new Vector2(topLeft.X, topLeft.Y + RowHeight * y), totalSize.X, 0.0015f);
                 }

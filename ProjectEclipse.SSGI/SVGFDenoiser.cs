@@ -177,7 +177,7 @@ namespace ProjectEclipse.SSGI
             UpdateTemporalCB(rc);
 
             rc.PixelShader.Set(_psTemporal);
-            rc.ComputeShader.SetSamplers(1, _samplerStates.Point, _samplerStates.Linear);
+            rc.PixelShader.SetSamplers(1, _samplerStates.Point, _samplerStates.Linear);
             rc.PixelShader.SetConstantBuffer(0, _cbuffer.Buffer);
             rc.PixelShader.SetShaderResources(0, currentFrame.Srv, _temporalHistory.Srv, depthBuffer.Srv, prevDepthBuffer.Srv, _buffer1.Srv, reflectionDepthBuffer?.Srv, gbuffer1.Srv);
             rc.OutputMerger.SetTargets(outputRtv.Rtv, newBuffer1.Rtv);
@@ -220,7 +220,7 @@ namespace ProjectEclipse.SSGI
                 var tempRtv2 = _resourcePool.BorrowTexture2DSrvRtv("svgf_atrous_temp2", _screenSize, Format.R16G16B16A16_Float);
 
                 rc.PixelShader.Set(_psAtrous);
-                rc.ComputeShader.SetSamplers(1, _samplerStates.Point, _samplerStates.Linear);
+                rc.PixelShader.SetSamplers(1, _samplerStates.Point, _samplerStates.Linear);
                 rc.PixelShader.SetConstantBuffer(0, _cbuffer.Buffer);
                 rc.PixelShader.SetShaderResources(1, depthBuffer.Srv, gbuffer1.Srv, _buffer1.Srv);
 
@@ -232,6 +232,9 @@ namespace ProjectEclipse.SSGI
                     (input, output) = (output, input);
 
                     UpdateAtrousCB(rc, 1 << i);
+
+                    // https://x.com/NateMorrical/status/1180302300549500928
+                    //UpdateAtrousCB(rc, 1 << (iterations - i - 1));
 
                     rc.PixelShader.SetShaderResource(0, i == 0 ? temporallyDenoisedFrame.Srv : input.Srv);
                     rc.OutputMerger.SetTargets(output.Rtv);

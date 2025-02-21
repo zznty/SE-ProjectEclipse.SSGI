@@ -20,10 +20,10 @@ namespace ProjectEclipse.SSGI
             public static readonly unsafe int Size = sizeof(PackedReservoir);
 
             Vector3 CreatedPos;
-            Vector2I CreatedNormalHalf; // w comp unused
+            uint CreatedNormalOctHalf; // 2x float16 oct-encoded normal
             Vector3 LightPos;
-            Vector2I LightNormalHalf;
-            Vector2I LightRadianceHalf;
+            uint LightNormalOctHalf;
+            Vector2I LightRadiancePacked;
             uint M_Age;
             float AvgWeight;
         }

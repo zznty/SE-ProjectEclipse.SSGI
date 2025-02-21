@@ -11,7 +11,6 @@
 #define INVERTED_DEPTH 1 // inverted if bigger = closer
 #define NUM_THREADS_XY 8 // only used in compute shaders
 #define BRDF_BIAS 0
-#define USE_MIP 0
 
 struct SSRInput
 {
@@ -30,10 +29,10 @@ struct SSRInput
 struct PackedReservoir
 {
     float3 CreatedPos;
-    uint2 CreatedNormalHalf;
+    uint CreatedNormalOctPacked;
     float3 LightPos;
-    uint2 LightNormalHalf;
-    uint2 LightRadianceHalf;
+    uint LightNormalOctPacked;
+    uint2 LightRadiancePacked;
     uint M_Age;
     float AvgWeight;
 };
@@ -67,10 +66,16 @@ struct RestirReservoir
     {
         PackedReservoir packed;
         packed.CreatedPos = CreatedPos;
-        packed.CreatedNormalHalf = uint2(f32tof16(CreatedNormal.x) | (f32tof16(CreatedNormal.y) << 16), asuint(CreatedNormal.z));
         packed.LightPos = LightPos;
-        packed.LightNormalHalf = uint2(f32tof16(LightNormal.x) | (f32tof16(LightNormal.y) << 16), asuint(LightNormal.z));
-        packed.LightRadianceHalf = uint2(f32tof16(LightRadiance.x) | (f32tof16(LightRadiance.y) << 16), asuint(LightRadiance.z));
+        
+        float2 createdNormalOct = EncodeOctNormal(CreatedNormal);
+        float2 lightNormalOct = EncodeOctNormal(LightNormal);
+        packed.CreatedNormalOctPacked = f32tof16(createdNormalOct.x) | (f32tof16(createdNormalOct.y) << 16);
+        packed.LightNormalOctPacked = f32tof16(lightNormalOct.x) | (f32tof16(lightNormalOct.y) << 16);
+        
+        // don't encode radiance bruh
+        packed.LightRadiancePacked = uint2(f32tof16(LightRadiance.x) | (f32tof16(LightRadiance.y) << 16), asuint(LightRadiance.z));
+        
         packed.M_Age = (M << 16) | (Age & 0xffff);
         packed.AvgWeight = AvgWeight;
         return packed;
@@ -80,10 +85,13 @@ struct RestirReservoir
     {
         RestirReservoir res;
         res.CreatedPos = packed.CreatedPos;
-        res.CreatedNormal = normalize(float3(f16tof32(packed.CreatedNormalHalf.x), f16tof32(packed.CreatedNormalHalf.x >> 16), asfloat(packed.CreatedNormalHalf.y)));
         res.LightPos = packed.LightPos;
-        res.LightNormal = normalize(float3(f16tof32(packed.LightNormalHalf.x), f16tof32(packed.LightNormalHalf.x >> 16), asfloat(packed.LightNormalHalf.y)));
-        res.LightRadiance = float3(f16tof32(packed.LightRadianceHalf.x), f16tof32(packed.LightRadianceHalf.x >> 16), asfloat(packed.LightRadianceHalf.y));
+        
+        res.CreatedNormal = DecodeOctNormal(float2(f16tof32(packed.CreatedNormalOctPacked), f16tof32(packed.CreatedNormalOctPacked >> 16)));
+        res.LightNormal = DecodeOctNormal(float2(f16tof32(packed.LightNormalOctPacked), f16tof32(packed.LightNormalOctPacked >> 16)));
+        
+        res.LightRadiance = float3(f16tof32(packed.LightRadiancePacked.x), f16tof32(packed.LightRadiancePacked.x >> 16), asfloat(packed.LightRadiancePacked.y));
+        
         res.M = (packed.M_Age >> 16);
         res.AvgWeight = packed.AvgWeight;
         res.Age = (packed.M_Age & 0xffff);

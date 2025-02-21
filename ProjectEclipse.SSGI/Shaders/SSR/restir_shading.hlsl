@@ -224,98 +224,94 @@ void cs(const uint3 dispatchThreadId : SV_DispatchThreadID)
     
     RestirReservoir reuseReservoir;
     
-    //if (uv.x < 0.5)
-    //{
-    //    reflectedColor += ReferenceSSR(pixelPos, uv, input, 4, randState);
-    //    reuseReservoir = LoadTemporalReservoir(pixelPos);
-    //}
-    //else
-    {
-        RestirReservoir spatialReservoir = LoadSpatialReservoir(pixelPos);
-        RestirReservoir temporalReservoir = LoadTemporalReservoir(pixelPos);
-        
-        spatialReservoir.AvgWeight = clamp(spatialReservoir.AvgWeight, 0, 100);
-        temporalReservoir.AvgWeight = clamp(temporalReservoir.AvgWeight, 0, 100);
-        
-        const float3 spatialLightDir = normalize(spatialReservoir.LightPos - input.PositionView);
-        const float3 temporalLightDir = normalize(temporalReservoir.LightPos - input.PositionView);
-        
-        float spatialW = spatialReservoir.M;
-        float temporalW = temporalReservoir.M;
-        
-        spatialW *= spatialReservoir.AvgWeight;
-        temporalW *= temporalReservoir.AvgWeight;
-        
-        spatialW *= evalTargetFunction(input, input.NormalView, input.PositionView, spatialReservoir.LightRadiance, spatialReservoir.LightPos);
-        temporalW *= evalTargetFunction(input, input.NormalView, input.PositionView, temporalReservoir.LightRadiance, temporalReservoir.LightPos);
-        
-        //spatialW = 0;
-        //temporalW = 0;
-        
-        //if (!ValidateReservoir(uv, input, spatialReservoir))
-        //    spatialW = 0;
-        
-        //if (!ValidateReservoir(uv, input, temporalReservoir))
-        //    temporalW = 0;
-        
-        float totalW = spatialW + temporalW;
-        
-        float3 spatialDiffuse, spatialSpecular;
-        Brdf(1 - input.Gloss, input.Metalness, input.Color, -input.RayDirView, spatialLightDir, input.NormalView, spatialDiffuse, spatialSpecular);
-        spatialDiffuse *= spatialReservoir.LightRadiance * spatialReservoir.AvgWeight * (spatialReservoir.M > 0);
-        spatialSpecular *= spatialReservoir.LightRadiance * spatialReservoir.AvgWeight * (spatialReservoir.M > 0);
-        
-        float3 temporalDiffuse, temporalSpecular;
-        Brdf(1 - input.Gloss, input.Metalness, input.Color, -input.RayDirView, temporalLightDir, input.NormalView, temporalDiffuse, temporalSpecular);
-        temporalDiffuse *= temporalReservoir.LightRadiance * temporalReservoir.AvgWeight * (temporalReservoir.M > 0);
-        temporalSpecular *= temporalReservoir.LightRadiance * temporalReservoir.AvgWeight * (temporalReservoir.M > 0);
-        
-        diffuse += totalW <= 0 ? 0 : (spatialDiffuse * (spatialW / totalW) + temporalDiffuse * (temporalW / totalW));
-        specular += totalW <= 0 ? 0 : (spatialSpecular * (spatialW / totalW) + temporalSpecular * (temporalW / totalW));
-        
-        reuseReservoir = temporalReservoir;
-        
-        float spatialRayLength = length(spatialReservoir.LightPos - input.PositionView);
-        float temporalRayLength = length(temporalReservoir.LightPos - input.PositionView);
-        
-        // extend the ray into the surface and get the depth
-        bool spatialValid = spatialW > 0;
-        bool temporalValid = temporalW > 0;
-        float3 spatialPSRHitPos = input.PositionView + input.RayDirView * spatialRayLength;
-        float3 temporalPSRHitPos = input.PositionView + input.RayDirView * temporalRayLength;
-        float div = 1.0 / (spatialValid + temporalValid);
-        ReflectionDepths[pixelPos] = div > 0 ? (spatialValid * ViewToClip(spatialPSRHitPos).z + temporalValid * ViewToClip(temporalPSRHitPos).z) * div : 0;
-        
-        //reuseReservoir = RestirReservoir::CreateEmpty();
-        //reuseReservoir.CreatedPos = input.PositionView;
-        //reuseReservoir.CreatedNormal = input.NormalView;
-        //
-        //float pTemporal = evalTargetFunction(input, input.NormalView, input.PositionView, temporalReservoir.LightRadiance, temporalReservoir.LightPos);
-        //float pSpatial = evalTargetFunction(input, input.NormalView, input.PositionView, spatialReservoir.LightRadiance, spatialReservoir.LightPos);
-        //
-        //float wiSpatial = clamp(spatialReservoir.AvgWeight * pSpatial * spatialReservoir.M, 0, 1e20);
-        //float wiTemporal = clamp(temporalReservoir.AvgWeight * pTemporal * temporalReservoir.M, 0, 1e20);
-        //
-        //float wSum = 0;
-        //updateReservoir(wiSpatial, spatialReservoir, reuseReservoir, wSum, randState);
-        //updateReservoir(wiTemporal, temporalReservoir, reuseReservoir, wSum, randState);
-        //
-        //float m = reuseReservoir.M == 0 ? 0 : 1.0 / float(reuseReservoir.M);
-        //float pNew = evalTargetFunction(input, input.NormalView, input.PositionView, reuseReservoir.LightRadiance, reuseReservoir.LightPos);
-        //float mWeight = pNew <= 0 ? 0 : (1.0 / pNew * m);
-        //float W = wSum * mWeight;
-        //reuseReservoir.AvgWeight = clamp(W, 0, 1e20);
-        
-        //ValidateReservoir(uv, input, reuseReservoir);
-    }
+    //RestirReservoir candidateReservoir = LoadCandidateReservoir(pixelPos);
+    RestirReservoir spatialReservoir = LoadSpatialReservoir(pixelPos);
+    RestirReservoir temporalReservoir = LoadTemporalReservoir(pixelPos);
+    
+    //candidateReservoir.AvgWeight = clamp(candidateReservoir.AvgWeight, 0, 100);
+    spatialReservoir.AvgWeight = clamp(spatialReservoir.AvgWeight, 0, 100);
+    temporalReservoir.AvgWeight = clamp(temporalReservoir.AvgWeight, 0, 100);
+    
+    //const float3 candidateLightDir = normalize(candidateReservoir.LightPos - input.PositionView);
+    const float3 spatialLightDir = normalize(spatialReservoir.LightPos - input.PositionView);
+    const float3 temporalLightDir = normalize(temporalReservoir.LightPos - input.PositionView);
+    
+    //float candidateW = candidateReservoir.M;
+    float spatialW = spatialReservoir.M;
+    float temporalW = temporalReservoir.M;
+    
+    //candidateW *= candidateReservoir.AvgWeight;
+    spatialW *= spatialReservoir.AvgWeight;
+    temporalW *= temporalReservoir.AvgWeight;
+    
+    //candidateW *= evalTargetFunction(input, input.NormalView, input.PositionView, candidateReservoir.LightRadiance, candidateReservoir.LightPos);
+    spatialW *= evalTargetFunction(input, input.NormalView, input.PositionView, spatialReservoir.LightRadiance, spatialReservoir.LightPos);
+    temporalW *= evalTargetFunction(input, input.NormalView, input.PositionView, temporalReservoir.LightRadiance, temporalReservoir.LightPos);
+    
+    //candidateW = 0;
+    //spatialW = 0;
+    //temporalW = 0;
+    
+    float totalW = /*candidateW +*/ spatialW + temporalW;
+    
+    //float3 candidateDiffuse, candidateSpecular;
+    //Brdf(1 - input.Gloss, input.Metalness, input.Color, -input.RayDirView, candidateLightDir, input.NormalView, candidateDiffuse, candidateSpecular);
+    //candidateDiffuse *= candidateReservoir.LightRadiance * candidateReservoir.AvgWeight * (candidateReservoir.M > 0);
+    //candidateSpecular *= candidateReservoir.LightRadiance * candidateReservoir.AvgWeight * (candidateReservoir.M > 0);
+    
+    float3 spatialDiffuse, spatialSpecular;
+    Brdf(1 - input.Gloss, input.Metalness, input.Color, -input.RayDirView, spatialLightDir, input.NormalView, spatialDiffuse, spatialSpecular);
+    spatialDiffuse *= spatialReservoir.LightRadiance * spatialReservoir.AvgWeight * (spatialReservoir.M > 0);
+    spatialSpecular *= spatialReservoir.LightRadiance * spatialReservoir.AvgWeight * (spatialReservoir.M > 0);
+    
+    float3 temporalDiffuse, temporalSpecular;
+    Brdf(1 - input.Gloss, input.Metalness, input.Color, -input.RayDirView, temporalLightDir, input.NormalView, temporalDiffuse, temporalSpecular);
+    temporalDiffuse *= temporalReservoir.LightRadiance * temporalReservoir.AvgWeight * (temporalReservoir.M > 0);
+    temporalSpecular *= temporalReservoir.LightRadiance * temporalReservoir.AvgWeight * (temporalReservoir.M > 0);
+    
+    diffuse += totalW <= 0 ? 0 : (/*candidateDiffuse * (candidateW / totalW) +*/ spatialDiffuse * (spatialW / totalW) + temporalDiffuse * (temporalW / totalW));
+    specular += totalW <= 0 ? 0 : (/*candidateSpecular * (candidateW / totalW) +*/ spatialSpecular * (spatialW / totalW) + temporalSpecular * (temporalW / totalW));
+    
+    reuseReservoir = temporalReservoir;
+    
+    //float candidateRayLength = length(candidateReservoir.LightPos - input.PositionView);
+    float spatialRayLength = length(spatialReservoir.LightPos - input.PositionView);
+    float temporalRayLength = length(temporalReservoir.LightPos - input.PositionView);
+    
+    // extend the ray into the surface and get the depth
+    //bool candidateValid = candidateW > 0;
+    bool spatialValid = spatialW > 0;
+    bool temporalValid = temporalW > 0;
+    //float3 candidatePSRHitPos = input.PositionView + input.RayDirView * candidateRayLength;
+    float3 spatialPSRHitPos = input.PositionView + input.RayDirView * spatialRayLength;
+    float3 temporalPSRHitPos = input.PositionView + input.RayDirView * temporalRayLength;
+    float div = 1.0 / (/*candidateValid +*/ spatialValid + temporalValid);
+    ReflectionDepths[pixelPos] = div > 0 ?
+        (/*candidateValid * ViewToClip(candidatePSRHitPos).z*/ + spatialValid * ViewToClip(spatialPSRHitPos).z + temporalValid * ViewToClip(temporalPSRHitPos).z) * div : ViewToClip(input.PositionView).z;
+    
+    //reuseReservoir = RestirReservoir::CreateEmpty();
+    //reuseReservoir.CreatedPos = input.PositionView;
+    //reuseReservoir.CreatedNormal = input.NormalView;
+    //
+    //float pTemporal = evalTargetFunction(input, input.NormalView, input.PositionView, temporalReservoir.LightRadiance, temporalReservoir.LightPos);
+    //float pSpatial = evalTargetFunction(input, input.NormalView, input.PositionView, spatialReservoir.LightRadiance, spatialReservoir.LightPos);
+    //
+    //float wiSpatial = clamp(spatialReservoir.AvgWeight * pSpatial * spatialReservoir.M, 0, 1e20);
+    //float wiTemporal = clamp(temporalReservoir.AvgWeight * pTemporal * temporalReservoir.M, 0, 1e20);
+    //
+    //float wSum = 0;
+    //updateReservoir(wiSpatial, spatialReservoir, reuseReservoir, wSum, randState);
+    //updateReservoir(wiTemporal, temporalReservoir, reuseReservoir, wSum, randState);
+    //
+    //float m = reuseReservoir.M == 0 ? 0 : 1.0 / float(reuseReservoir.M);
+    //float pNew = evalTargetFunction(input, input.NormalView, input.PositionView, reuseReservoir.LightRadiance, reuseReservoir.LightPos);
+    //float mWeight = pNew <= 0 ? 0 : (1.0 / pNew * m);
+    //float W = wSum * mWeight;
+    //reuseReservoir.AvgWeight = clamp(W, 0, 1e20);
+    
+    //ValidateReservoir(uv, input, reuseReservoir);
     
     DemodulateRadiance(input.Color, input.NormalView, input.Metalness, 1 - input.Gloss, -input.RayDirView, diffuse, specular);
-    
-    //if (luminance(diffuse + specular) > 50)
-    //{
-    //    diffuse = float4(1, 0, 0, 1);
-    //    specular = float4(1, 0, 0, 1);
-    //}
     
     StorePrevReservoir(pixelPos, reuseReservoir);
     RestirOutputTexture[pixelPos] = float4(diffuse, 1); // irradiance only

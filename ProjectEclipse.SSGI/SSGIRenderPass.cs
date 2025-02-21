@@ -189,14 +189,8 @@ namespace ProjectEclipse.SSGI
             {
                 _renderUtils.CopyToRT(rc, frameBuffer, _filteredFrame);
             }
-            else
+            else if (_config.Data.UseGaussianPrefiltering)
             {
-                //_renderUtils.CopyToRT(rc, frameBuffer, _filteredFrame);
-                //rc.OutputMerger.SetTargets();
-                //rc.GenerateMips(_filteredFrame.Srv);
-                //rc.OutputMerger.SetTargets();
-                //return;
-
                 Vector2[] dir = new Vector2[_filteredFrame.MipLevels];
                 dir[0] = (Vector2)frameBuffer.Size;
                 for (int i = 1; i < dir.Length; i++)
@@ -243,6 +237,13 @@ namespace ProjectEclipse.SSGI
 
                 mipTex0.Return();
                 mipTex1.Return();
+            }
+            else
+            {
+                _renderUtils.CopyToRT(rc, frameBuffer, _filteredFrame);
+                rc.OutputMerger.SetTargets();
+                rc.GenerateMips(_filteredFrame.Srv);
+                rc.OutputMerger.SetTargets();
             }
         }
 

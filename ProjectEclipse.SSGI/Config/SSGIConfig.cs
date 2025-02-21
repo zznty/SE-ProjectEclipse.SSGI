@@ -22,6 +22,7 @@ namespace ProjectEclipse.SSGI.Config
                 set => _raysPerPixel = MathHelper.Clamp(value, 1, 32);
             }
             public bool EnableInputPrefiltering { get; set; }
+            public bool UseGaussianPrefiltering { get; set; }
             public float IndirectLightMulti
             {
                 get => _indirectLightMulti;
@@ -67,6 +68,7 @@ namespace ProjectEclipse.SSGI.Config
                 MaxTraceIterations = 80,
                 RaysPerPixel = 1,
                 EnableInputPrefiltering = true,
+                UseGaussianPrefiltering = false,
                 IndirectLightMulti = 1.0f,
                 //Restir_Enabled = true,
                 //Restir_Temporal_MaxHistory = 20,
@@ -87,6 +89,7 @@ namespace ProjectEclipse.SSGI.Config
                     MaxTraceIterations = MaxTraceIterations,
                     RaysPerPixel = RaysPerPixel,
                     EnableInputPrefiltering = EnableInputPrefiltering,
+                    UseGaussianPrefiltering = UseGaussianPrefiltering,
                     IndirectLightMulti = IndirectLightMulti,
                     Svgf_Enabled = Svgf_Enabled,
                     Svgf_DiffuseTemporalWeight = Svgf_DiffuseTemporalWeight,
